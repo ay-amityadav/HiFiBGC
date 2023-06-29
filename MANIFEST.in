@@ -1,0 +1,4 @@
+include hifibgc/hifibgc.LICENSE
+include hifibgc/hifibgc.CITATION
+include hifibgc/hifibgc.VERSION
+recursive-include hifibgc *
