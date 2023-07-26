@@ -8,8 +8,8 @@ https://github.com/beardymcjohnface/Snaketool/wiki/Customising-your-Snaketool
 import os
 import click
 
-from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
-
+#from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
@@ -46,7 +46,7 @@ def common_options(func):
             "--output",
             help="Output directory",
             type=click.Path(dir_okay=True, writable=True, readable=True),
-            default="hifibgc.out",
+            default="hifibgc1.out",
             show_default=True,
         ),
         click.option(
@@ -57,7 +57,7 @@ def common_options(func):
             help="Custom config file [default: (outputDir)/config.yaml]",
         ),
         click.option(
-            "--threads", help="Number of threads to use", default=1, show_default=True
+            "--threads", help="Number of threads to use", default=80, show_default=True
         ),
         click.option(
             "--use-conda/--no-use-conda",
@@ -102,7 +102,7 @@ def common_options(func):
 )
 @click.version_option(get_version(), "-v", "--version", is_flag=True)
 def cli():
-    """Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data
+    """Detect2 Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data
     \b
     For more options, run:
     hifibgc command --help"""
@@ -128,6 +128,33 @@ Available targets:
     print_targets   List available targets
 """
 
+# @click.command(
+#     epilog=help_msg_extra,
+#     context_settings=dict(
+#         help_option_names=["-h", "--help"], ignore_unknown_options=True
+#     ),
+# )
+# @click.option("--input", "_input", help="Input file/directory", type=str, required=True)
+# @common_options
+# def run(_input, output, log, **kwargs):
+#     """Run HiFiBGC"""
+#     # Config to add or update in configfile
+#     merge_config = {
+#         "input": _input,
+#         "output": output,
+#         "log": log
+#     }
+
+#     # run!
+#     run_snakemake(
+#         # Full path to Snakefile
+#         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
+#         system_config=snake_base(os.path.join("config", "config.yaml")),
+#         merge_config=merge_config,
+#         log=log,
+#         **kwargs
+#     )
+
 
 @click.command(
     epilog=help_msg_extra,
@@ -135,15 +162,13 @@ Available targets:
         help_option_names=["-h", "--help"], ignore_unknown_options=True
     ),
 )
-@click.option("--input", "_input", help="Input file/directory", type=str, required=True)
 @common_options
-def run(_input, output, log, **kwargs):
+def run(output, log, **kwargs):
     """Run HiFiBGC"""
     # Config to add or update in configfile
     merge_config = {
-        "input": _input,
-        "output": output,
-        "log": log
+     "output": output,
+     "log": log
     }
 
     # run!
@@ -152,7 +177,6 @@ def run(_input, output, log, **kwargs):
         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
         system_config=snake_base(os.path.join("config", "config.yaml")),
         merge_config=merge_config,
-        log=log,
         **kwargs
     )
 

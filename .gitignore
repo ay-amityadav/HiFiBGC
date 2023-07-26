@@ -1,0 +1,12 @@
+.snakemake
+hifibgc.egg-info
+dist/*
+dist/hifibgc-0.1.0a1.tar.gz
+
+hifibgc/antismash
+hifibgc/bigscape
+hifibgc/canu
+hifibgc/output
+hifibgc/output1
+hifibgc/output3
+hifibgc/workflow/conda

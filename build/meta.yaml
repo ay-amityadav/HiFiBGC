@@ -1,0 +1,47 @@
+{% set name = "hifibgc" %}
+{% set version = "0.1.0a1" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 3bbfd05c0329f21c76e4368b7002ba715eccbf2dbb6c1d9b5e563aebf64149b6
+
+build:
+  number: 0
+  noarch: python
+  entry_points:
+    - hifibgc=hifibgc.__main__:main
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - pip
+    - python
+  run:
+    - click >=8.1.3
+    - python >=3.8,<3.11
+    - pyyaml >=6.0
+    - snakemake-minimal >=7.14.0
+    - mamba <1.4.2
+
+test:
+  imports:
+    - hifibgc
+  commands:
+    - hifibgc --help
+
+about:
+  home: The package home page
+  license: UNKNOWN
+  license_family: OTHER
+  license_file: 
+  summary: "Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data"
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here

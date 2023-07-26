@@ -52,7 +52,6 @@ setup(
     data_files=get_data_files(),
     py_modules=["hifibgc"],
     install_requires=[
-        "snaketool-utils>=0.0.2",
         "snakemake>=7.14.0",
         "pyyaml>=6.0",
         "Click>=8.1.3",

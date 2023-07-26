@@ -1,4 +1,12 @@
 # Snakemake config
-input:
-output: 'hifibgc.out/'
-log: 'hifibgc/hifibgc.log'
+input: 'test_data/test_data_sampled.fastq' 
+log: 
+
+# Taken and Adapted from: https://github.com/Vini2/phables/blob/e5d46b2c71827635a3eabb33e05c85a0fac68e0c/phables/config/config.yaml
+# Job resources for use with Snakemake profiles
+#   jobCPU will be scaled down if running locally with less than 8 threads
+#   jobMem is ignored when running locally
+threads: 80
+resources:
+  jobCPU: 80
+  #jobMem: 16000       # in Mb

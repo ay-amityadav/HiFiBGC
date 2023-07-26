@@ -1,4 +1,10 @@
 include hifibgc/hifibgc.LICENSE
 include hifibgc/hifibgc.CITATION
 include hifibgc/hifibgc.VERSION
-recursive-include hifibgc *
+include hifibgc/__init__.py
+include hifibgc/__main__.py
+include hifibgc/cli_utils.py
+include hifibgc/workflow/envs/*
+include hifibgc/workflow/rules/*
+include hifibgc/workflow/scripts/*
+include hifibgc/workflow/Snakefile
