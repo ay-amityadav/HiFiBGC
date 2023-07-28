@@ -8,3 +8,6 @@ include hifibgc/workflow/envs/*
 include hifibgc/workflow/rules/*
 include hifibgc/workflow/scripts/*
 include hifibgc/workflow/Snakefile
+include hifibgc/workflow/install.smk
+include hifibgc/config/*
+include hifibgc/test_data/*

@@ -10,6 +10,7 @@ import click
 
 #from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+#from hifibgc.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
@@ -128,47 +129,21 @@ Available targets:
     print_targets   List available targets
 """
 
-# @click.command(
-#     epilog=help_msg_extra,
-#     context_settings=dict(
-#         help_option_names=["-h", "--help"], ignore_unknown_options=True
-#     ),
-# )
-# @click.option("--input", "_input", help="Input file/directory", type=str, required=True)
-# @common_options
-# def run(_input, output, log, **kwargs):
-#     """Run HiFiBGC"""
-#     # Config to add or update in configfile
-#     merge_config = {
-#         "input": _input,
-#         "output": output,
-#         "log": log
-#     }
-
-#     # run!
-#     run_snakemake(
-#         # Full path to Snakefile
-#         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
-#         system_config=snake_base(os.path.join("config", "config.yaml")),
-#         merge_config=merge_config,
-#         log=log,
-#         **kwargs
-#     )
-
-
 @click.command(
     epilog=help_msg_extra,
     context_settings=dict(
         help_option_names=["-h", "--help"], ignore_unknown_options=True
     ),
 )
+@click.option("--input", "_input", help="Input file/directory", type=str, required=True)
 @common_options
-def run(output, log, **kwargs):
+def run(_input, output, log, **kwargs):
     """Run HiFiBGC"""
     # Config to add or update in configfile
     merge_config = {
-     "output": output,
-     "log": log
+        "input": _input,
+        "output": output,
+        "log": log
     }
 
     # run!
@@ -177,9 +152,53 @@ def run(output, log, **kwargs):
         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
         system_config=snake_base(os.path.join("config", "config.yaml")),
         merge_config=merge_config,
+        log=log,
         **kwargs
     )
 
+
+# @click.command(
+#     epilog=help_msg_extra,
+#     context_settings=dict(
+#         help_option_names=["-h", "--help"], ignore_unknown_options=True
+#     ),
+# )
+# @common_options
+# def run(output, log, **kwargs):
+#     """Run HiFiBGC"""
+#     # Config to add or update in configfile
+#     merge_config = {
+#      "output": output,
+#      "log": log
+#     }
+
+#     # run!
+#     run_snakemake(
+#         # Full path to Snakefile
+#         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
+#         system_config=snake_base(os.path.join("config", "config.yaml")),
+#         merge_config=merge_config,
+#         **kwargs
+#     )
+
+
+# Install command
+@click.command(
+    epilog=help_msg_extra,
+    context_settings=dict(
+        help_option_names=["-h", "--help"], ignore_unknown_options=True
+    ),
+)
+@common_options
+def install(**kwargs):
+    """Install database/tool"""
+
+    # run!
+    run_snakemake(
+        # Full path to Snakefile
+        snakefile_path=snake_base(os.path.join("workflow", "install.smk")),
+        **kwargs
+    )
 
 @click.command()
 @common_options
@@ -195,6 +214,7 @@ def citation(**kwargs):
 
 
 cli.add_command(run)
+cli.add_command(install)
 cli.add_command(config)
 cli.add_command(citation)
 

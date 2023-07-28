@@ -169,19 +169,27 @@ rule hicanu:
     output: 
         os.path.join(OUTDIR, 'assembly', 'hicanu', 'hicanu.contigs.fasta'),
         DIR = directory(os.path.join(OUTDIR, 'assembly', 'hicanu'))
+    conda:
+        "envs/canu.yml"
     threads:
         80
     log:
         os.path.join(LOGSDIR, "hicanu_assembly.log")
     shell:
         """
-        if ./canu/canu-2.2/bin/canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 > {log} 2>&1; then
-            echo "First command succeeded."
+        if canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 > {log} 2>&1; then
+            echo "Enough data present for assembly and successfully completed."
         else
-            echo "First command failed. Running the second command."
-            ./canu/canu-2.2/bin/canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 > {log} 2>&1
+            echo "Enough data not present for assembly, hence running with tweaked parameters."
+            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 > {log} 2>&1
         fi
         """
+        # if ./canu/canu-2.2/bin/canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 > {log} 2>&1; then
+        #     echo "First command succeeded."
+        # else
+        #     echo "First command failed. Running the second command."
+        #     ./canu/canu-2.2/bin/canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 > {log} 2>&1
+        # fi
         # IMP: In above command, I have added parameter `minInputCoverage=0.3` to resolve the issue I was facing due to small size of test data. Relevant issue: https://github.com/marbl/canu/issues/1760. Also, in regard to this only, stopOnLowCoverage=0.3 parameter was added above. 
         # Above parameter settings are taken from "Source: Metagenome assembly of high-fidelity long reads with hifiasm-meta"
         
@@ -296,48 +304,62 @@ rule antismash_db_setup:
         touch(os.path.join(LOGSDIR, "antismash_db_setup.done")), 
         DIR = directory(os.path.join('antismash', 'databases'))
     conda:
-        "envs/antismash_bgcflow.yml"
+        "envs/antismash_v7_bgcflow.yml"
     log:
         os.path.join(LOGSDIR, "antismash_db_setup.log")
     shell:
         """
         download-antismash-databases --database-dir {output.DIR} 2>> {log}
         antismash --version >> {log}
-        antismash --check-prereqs >> {log}
+        antismash --database {output.DIR} --prepare-data &>> {log}
+        #antismash --check-prereqs >> {log}
         """
 
 rule antismash:
     input: 
         os.path.join(LOGSDIR, "antismash_db_setup.done"),
+        antismash_database_dir = os.path.join('antismash', 'databases'),
         hifiasm_meta_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'hifiasm_meta_contigs.fna'),
         metaflye_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'metaflye_contigs.fna'),
         hicanu_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'hicanu_contigs.fna'),
-        unmapped_reads = os.path.join(OUTDIR, 'antismash', 'input', 'unmapped_reads.fna')
+        unmapped_reads = os.path.join(OUTDIR, 'antismash', 'input', 'unmapped_reads.fna'),
     output:
         hifiasm_meta_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'hifiasm-meta')),
         metaflye_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'metaflye')),
         hicanu_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'hicanu')),
         unmapped_reads_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'unmapped-reads')),
     conda:
-        "envs/antismash_bgcflow.yml"
+        "envs/antismash_v7_bgcflow.yml"
     threads:
         80 
     log:
         os.path.join(LOGSDIR, "antismash.log")
     shell:
         """
-        antismash --genefinding-tool prodigal-m --output-dir {output.hifiasm_meta_antismash} --allow-long-headers -c {threads} {input.hifiasm_meta_assembly} --logfile {log} 2>> {log}
-        antismash --genefinding-tool prodigal-m --output-dir {output.metaflye_antismash} --allow-long-headers -c {threads} {input.metaflye_assembly} --logfile {log} 2>> {log}
-        antismash --genefinding-tool prodigal-m --output-dir {output.hicanu_antismash} --allow-long-headers -c {threads} {input.hicanu_assembly} --logfile {log} 2>> {log}
+        antismash --genefinding-tool prodigal-m --output-dir {output.hifiasm_meta_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.hifiasm_meta_assembly} --logfile {log} 2>> {log}
+        antismash --genefinding-tool prodigal-m --output-dir {output.metaflye_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.metaflye_assembly} --logfile {log} 2>> {log}
+        antismash --genefinding-tool prodigal-m --output-dir {output.hicanu_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.hicanu_assembly} --logfile {log} 2>> {log}
+        
+        # antismash --genefinding-tool prodigal-m --output-dir {output.hifiasm_meta_antismash} --allow-long-headers -c {threads} {input.hifiasm_meta_assembly} --logfile {log} 2>> {log}
+        # antismash --genefinding-tool prodigal-m --output-dir {output.metaflye_antismash} --allow-long-headers -c {threads} {input.metaflye_assembly} --logfile {log} 2>> {log}
+        # antismash --genefinding-tool prodigal-m --output-dir {output.hicanu_antismash} --allow-long-headers -c {threads} {input.hicanu_assembly} --logfile {log} 2>> {log}
         
         if [ ! -s {input.unmapped_reads} ]; then
             echo "File unmapped_reads.fna is empty"
             mkdir -p {output.unmapped_reads_antismash}
         else
             echo "File unmapped_reads.fna is not empty"
-            antismash --genefinding-tool prodigal-m --output-dir {output.unmapped_reads_antismash} --allow-long-headers -c {threads} {input.unmapped_reads} --logfile {log} 2>> {log}
+            antismash --genefinding-tool prodigal-m --output-dir {output.unmapped_reads_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.unmapped_reads} --logfile {log} 2>> {log}
         fi
         
+        # if [ ! -s {input.unmapped_reads} ]; then
+        #     echo "File unmapped_reads.fna is empty"
+        #     mkdir -p {output.unmapped_reads_antismash}
+        # else
+        #     echo "File unmapped_reads.fna is not empty"
+        #     antismash --genefinding-tool prodigal-m --output-dir {output.unmapped_reads_antismash} --allow-long-headers -c {threads} {input.unmapped_reads} --logfile {log} 2>> {log}
+        # fi
+
         """
 
 # Below command was used for current antismash outputs on various datasets
@@ -361,24 +383,24 @@ rule bigscape_prepare_input:
         directory(os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_input'))
     shell:
         """
-        python3 workflow/scripts/bigscape_create_symlinks.py \
+        python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
             --input_dir {input.hifiasm_meta_antismash} \
             --output_dir {output} \
             --prefix 'hifiasm-meta'
 
-        python3 workflow/scripts/bigscape_create_symlinks.py \
+        python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
             --input_dir {input.metaflye_antismash} \
             --output_dir {output} \
             --prefix 'metaflye'
 
-        python3 workflow/scripts/bigscape_create_symlinks.py \
+        python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
             --input_dir {input.hicanu_antismash} \
             --output_dir {output} \
             --prefix 'hicanu'
 
         # Check if the directory is non-empty
         if [ "$(ls -A {input.unmapped_reads_antismash})" ]; then
-            python3 workflow/scripts/bigscape_create_symlinks.py \
+            python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
             --input_dir {input.unmapped_reads_antismash} \
             --output_dir {output} \
             --prefix 'unmapped_reads_antismash'
@@ -434,7 +456,7 @@ rule parse_bigscape_output:
         for i in {input}/network_files/*/mix/mix_clustering_c0.*0.tsv; do
             echo "Processing $i"
 
-            python workflow/scripts/bigscape_parsing.py \
+            python hifibgc/workflow/scripts/bigscape_parsing.py \
             --input_clustering_file $i \
             --output_directory {output.bigscape_output_dir}
         done    
@@ -454,8 +476,8 @@ rule plot_upsetplot:
         """
         mkdir -p {output}
 
-        Rscript workflow/scripts/upsetplot.R {input.c0_00} {output} c0.00
-        Rscript workflow/scripts/upsetplot.R {input.c0_10} {output} c0.10
-        Rscript workflow/scripts/upsetplot.R {input.c0_20} {output} c0.20
-        Rscript workflow/scripts/upsetplot.R {input.c0_30} {output} c0.30
+        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_00} {output} c0.00
+        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_10} {output} c0.10
+        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_20} {output} c0.20
+        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_30} {output} c0.30
         """
