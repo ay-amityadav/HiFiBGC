@@ -52,9 +52,10 @@ setup(
     data_files=get_data_files(),
     py_modules=["hifibgc"],
     install_requires=[
-        "snakemake>=7.14.0",
+        "snakemake==7.31.1",
         "pyyaml>=6.0",
         "Click>=8.1.3",
+        "pandas==2.0.3"
     ],
     entry_points={
         "console_scripts": [
