@@ -10,7 +10,7 @@ import click
 
 #from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
-#from hifibgc.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+#from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
@@ -103,7 +103,7 @@ def common_options(func):
 )
 @click.version_option(get_version(), "-v", "--version", is_flag=True)
 def cli():
-    """Detect2 Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data
+    """Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data
     \b
     For more options, run:
     hifibgc command --help"""
@@ -139,6 +139,9 @@ Available targets:
 @common_options
 def run(_input, output, log, **kwargs):
     """Run HiFiBGC"""
+    # Get absolute path of input file
+    _input = os.path.abspath(_input)
+    
     # Config to add or update in configfile
     merge_config = {
         "input": _input,
@@ -190,15 +193,42 @@ def run(_input, output, log, **kwargs):
     ),
 )
 @common_options
-def install(**kwargs):
+def install(output, **kwargs):
     """Install database/tool"""
 
     # run!
     run_snakemake(
         # Full path to Snakefile
         snakefile_path=snake_base(os.path.join("workflow", "install.smk")),
+        system_config=snake_base(os.path.join("config", "config.yaml")),
         **kwargs
     )
+
+# Test command
+@click.command(
+    epilog=help_msg_extra,
+    context_settings=dict(
+        help_option_names=["-h", "--help"], ignore_unknown_options=True
+    ),
+)
+@common_options
+def test(**kwargs):
+    """Test HiFiBGC"""
+    input = snake_base(os.path.join("test_data", "test_data_sampled.fastq"))
+    
+    # Config to add or update in configfile
+    merge_config = {"input": input}
+
+    # run!
+    run_snakemake(
+        # Full path to Snakefile
+        snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
+        system_config=snake_base(os.path.join("config", "config.yaml")),
+        merge_config=merge_config,
+        **kwargs
+    )
+
+
 
 @click.command()
 @common_options
@@ -215,6 +245,7 @@ def citation(**kwargs):
 
 cli.add_command(run)
 cli.add_command(install)
+cli.add_command(test)
 cli.add_command(config)
 cli.add_command(citation)
 
