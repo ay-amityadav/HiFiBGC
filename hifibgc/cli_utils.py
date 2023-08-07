@@ -154,6 +154,8 @@ def copy_config(
                 log=log,
             )
         else:
+            print(f"system_config: {system_config}")
+            print(f"local_config: {local_config}")
             copyfile(system_config, local_config)
     else:
         msg(
