@@ -1,6 +1,7 @@
 # Snakemake config
-input: 'test_data/test_data_sampled.fastq' 
-log: 
+input: # Put absolute path of input file here
+output: hifibgc1.out
+log: hifibgc1.out/hifibgc.log
 
 # Taken and Adapted from: https://github.com/Vini2/phables/blob/e5d46b2c71827635a3eabb33e05c85a0fac68e0c/phables/config/config.yaml
 # Job resources for use with Snakemake profiles
