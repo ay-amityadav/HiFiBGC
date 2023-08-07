@@ -1,7 +1,5 @@
 import glob
-
-#configfile: os.path.join(workflow.basedir, '../', 'config', 'config.yaml')
-#print(f"workflow.basedir: {workflow.basedir}")
+import os
 
 # Concatenate Snakemake's own log file with the master log file
 def copy_log_file():
@@ -17,17 +15,13 @@ onsuccess:
 onerror:
     copy_log_file()
 
+print(f"workflow.basedir: {workflow.basedir}")
 
-# Target file
-#outTouch = os.path.join(config['output'], config['input'])
-#outTouch = os.path.join(config['output'])
 INPUT_FASTQ = config['input']
 OUTDIR = config['output']
 print(f"input_fastq: {INPUT_FASTQ}")
 print(f"output: {config['output']}")
 print(f"log: {config['log']}")
-#print(f"threads: {config['resources']['jobCPU']}")
-#print(f"test: {config['test']}")
 
 # Mark target rules
 target_rules = []
@@ -56,59 +50,15 @@ rule seqkit_stats:
         seqkit stats {input} -o {output}
         """
 
-# Directories in output
-#     assembly
-#         hifiasm-meta_assembly/
-#         metaflye_assembly/
-#         hicanu_assembly/
-#         merged_assembly
-#     mapping_reads_to_merged_assembly
-#         unmapped_reads.fasta
-#     antismash
-#         input
-#             ln -s hifiasm_meta_assembly here
-#             ln -s metaflye_assembly here
-#             ln -s hicanu_assembly here
-#         output
-#             hifiasm-meta/
-#             metaflye/
-#             hicanu/
-#             merged_assembly_unmapped_reads/
-#     bgc_clustering   
-#         bigscape_input/
-#         bigscape_output/
-#         bigscape_output_parse/
-#         bigscape_output_parse_plots/
-#     analysis
-#         *.ipynb
-#         *.png
-
 @targetRule
 rule all:
     input:
+        os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'),
         # Assembly
-        # os.path.join(OUTDIR, "seqkit_stats.txt"),
-        # os.path.join(OUTDIR, 'assembly', 'hifiasm-meta'),
-        # os.path.join(OUTDIR, 'assembly', 'metaflye'),
-        # os.path.join(OUTDIR, 'assembly', 'hicanu'),
         # Antismash
-        # os.path.join('antismash', 'databases'),
-        # os.path.join(OUTDIR, 'antismash', 'input', 'hifiasm_meta_contigs.fna'),
-        # os.path.join(OUTDIR, 'antismash', 'input', 'metaflye_contigs.fna'),
-        # os.path.join(OUTDIR, 'antismash', 'input', 'hicanu_contigs.fna'),
-        # os.path.join(OUTDIR, 'antismash', 'output', 'hifiasm-meta'),
-        # os.path.join(OUTDIR, 'antismash', 'output', 'metaflye'),
-        # os.path.join(OUTDIR, 'antismash', 'output', 'hicanu'),
         # BGC Clustering
-        # os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_input'),
-        # 'bigscape',
-        # os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output'),
-        # os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse'),
-        os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse_plots'),
         # Read mapping
-        # os.path.join(OUTDIR, 'assembly', 'merged_assembly'),
-        # os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta'),
-        os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped_seqlength_histogram.svg')
+        os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped_seqlength_histogram.svg'),
 
 
 #######################
@@ -120,28 +70,31 @@ rule all:
 Declare some directories for pipeline intermediates and outputs.
 """
 LOGSDIR = os.path.join(OUTDIR, 'logs')
-#os.path.join(LOGSDIR, "gfa2fasta.log")
-#print(f"threads after LOGSDIR: {config['resources']['jobCPU']}")
-#print(f"threads: {config[]}")
+BENCHMARKS_DIR = os.path.join(OUTDIR, 'benchmarks')
+
 
 # TODO: add read selection option as done in `assembly.smk`: rule `hifiasm_meta_with_read_selection` 
 rule hifiasm_meta: 
     input:
         INPUT_FASTQ
     output: 
-        os.path.join(OUTDIR, 'assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
-        DIR = directory(os.path.join(OUTDIR, 'assembly', 'hifiasm-meta')),
+        os.path.join(OUTDIR, '01_assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
+        DIR = directory(os.path.join(OUTDIR, '01_assembly', 'hifiasm-meta')),
     conda:
         "envs/hifiasm_meta.yml"
     threads:
         80
     log:
         os.path.join(LOGSDIR, "hifiasm-meta_assembly.log")
+    benchmark:
+        os.path.join(BENCHMARKS_DIR, "rule_hifiasm_meta.tsv")
     shell:
         """
         mkdir -p {output.DIR}
         cd {output.DIR}
-        hifiasm_meta -t {threads} -o hifiasm_meta ./../../../{input} 2> ./../../../{log}
+        hifiasm_meta -t {threads} -o hifiasm_meta {input} 2> ./../../../{log}
+        # Below command is used when {input} is a relative path (relative to the current working directory)
+        #hifiasm_meta -t {threads} -o hifiasm_meta ./../../../{input} 2> ./../../../{log}
         gfatools gfa2fa hifiasm_meta.p_ctg.gfa > hifiasm_meta.p_contigs.fa 2>> ./../../../{log}
         cd -
         """
@@ -150,14 +103,16 @@ rule metaflye:
     input: 
         INPUT_FASTQ        
     output:
-        os.path.join(OUTDIR, 'assembly', 'metaflye', 'assembly.fasta'),
-        DIR = directory(os.path.join(OUTDIR, 'assembly', 'metaflye')),
+        os.path.join(OUTDIR, '01_assembly', 'metaflye', 'assembly.fasta'),
+        DIR = directory(os.path.join(OUTDIR, '01_assembly', 'metaflye')),
     conda:
         "envs/flye.yml"
     threads:
         80
     log:
         os.path.join(LOGSDIR, "metaflye_assembly.log")
+    benchmark:
+        os.path.join(BENCHMARKS_DIR, "rule_metaflye.tsv")
     shell:
         """
         flye --pacbio-hifi {input} --out-dir {output.DIR} --threads 80 --meta 2> {log}
@@ -167,29 +122,25 @@ rule hicanu:
     input:
         INPUT_FASTQ
     output: 
-        os.path.join(OUTDIR, 'assembly', 'hicanu', 'hicanu.contigs.fasta'),
-        DIR = directory(os.path.join(OUTDIR, 'assembly', 'hicanu'))
+        os.path.join(OUTDIR, '01_assembly', 'hicanu', 'hicanu.contigs.fasta'),
+        DIR = directory(os.path.join(OUTDIR, '01_assembly', 'hicanu'))
     conda:
         "envs/canu.yml"
     threads:
         80
     log:
         os.path.join(LOGSDIR, "hicanu_assembly.log")
+    benchmark:
+        os.path.join(BENCHMARKS_DIR, "rule_hicanu.tsv")
     shell:
         """
-        if canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 > {log} 2>&1; then
+        if canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 maxThreads={threads} > {log} 2>&1; then
             echo "Enough data present for assembly and successfully completed."
         else
             echo "Enough data not present for assembly, hence running with tweaked parameters."
-            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 > {log} 2>&1
+            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 maxThreads={threads} > {log} 2>&1
         fi
         """
-        # if ./canu/canu-2.2/bin/canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 > {log} 2>&1; then
-        #     echo "First command succeeded."
-        # else
-        #     echo "First command failed. Running the second command."
-        #     ./canu/canu-2.2/bin/canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 > {log} 2>&1
-        # fi
         # IMP: In above command, I have added parameter `minInputCoverage=0.3` to resolve the issue I was facing due to small size of test data. Relevant issue: https://github.com/marbl/canu/issues/1760. Also, in regard to this only, stopOnLowCoverage=0.3 parameter was added above. 
         # Above parameter settings are taken from "Source: Metagenome assembly of high-fidelity long reads with hifiasm-meta"
         
@@ -210,12 +161,12 @@ rule hicanu:
 
 rule merge_assembly:
     input: 
-        hifiasm_meta_assembly = os.path.join(OUTDIR, 'assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
-        metaflye_assembly = os.path.join(OUTDIR, 'assembly', 'metaflye', 'assembly.fasta'),
-        hicanu_assembly = os.path.join(OUTDIR, 'assembly', 'hicanu', 'hicanu.contigs.fasta')
+        hifiasm_meta_assembly = os.path.join(OUTDIR, '01_assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
+        metaflye_assembly = os.path.join(OUTDIR, '01_assembly', 'metaflye', 'assembly.fasta'),
+        hicanu_assembly = os.path.join(OUTDIR, '01_assembly', 'hicanu', 'hicanu.contigs.fasta')
     output: 
-        os.path.join(OUTDIR, 'assembly', 'merged_assembly', 'merged_assembly.fasta'),
-        DIR = directory(os.path.join(OUTDIR, 'assembly', 'merged_assembly')),
+        os.path.join(OUTDIR, '01_assembly', 'merged_assembly', 'merged_assembly.fasta'),
+        DIR = directory(os.path.join(OUTDIR, '01_assembly', 'merged_assembly')),
     shell:
         """
         mkdir -p {output.DIR}
@@ -225,17 +176,16 @@ rule merge_assembly:
 rule map_reads_and_extract_unmapped_reads:
     input: 
         reads = INPUT_FASTQ,
-        merged_assembly = os.path.join(OUTDIR, 'assembly', 'merged_assembly', 'merged_assembly.fasta')
+        merged_assembly = os.path.join(OUTDIR, '01_assembly', 'merged_assembly', 'merged_assembly.fasta')
     output:
-        os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta'),
-        DIR = directory(os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly')),
-        #bam = f"mapping_{{dataset}}_to_{{assembler}}-assembly.bam"
-        #f"{{dataset}}/merged_assembly_mapping_reads/reads_mapped_to_merged_assembly_unmapped.fasta",
-        #os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly'),
+        os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta'),
+        DIR = directory(os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly')),
     conda:
         "envs/mapping.yml"
     threads:
         80
+    benchmark:
+        os.path.join(BENCHMARKS_DIR, "rule_map_reads_and_extract_unmapped_reads.tsv")
     shell:
         """
         # Make directory
@@ -260,9 +210,9 @@ rule map_reads_and_extract_unmapped_reads:
 
 rule unmapped_reads_seqlength_histogram:
     input:
-        os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta') 
+        os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta') 
     output:
-        os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped_seqlength_histogram.svg')
+        os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped_seqlength_histogram.svg')
     conda:
         "envs/seqkit.yml"
     shell:
@@ -278,15 +228,15 @@ rule unmapped_reads_seqlength_histogram:
 
 rule prepare_input_for_antismash:
     input:
-        hifiasm_meta_assembly = os.path.join(OUTDIR, 'assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
-        metaflye_assembly = os.path.join(OUTDIR, 'assembly', 'metaflye', 'assembly.fasta'),
-        hicanu_assembly = os.path.join(OUTDIR, 'assembly', 'hicanu', 'hicanu.contigs.fasta'),
-        unmapped_reads = os.path.join(OUTDIR, 'mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta')
+        hifiasm_meta_assembly = os.path.join(OUTDIR, '01_assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
+        metaflye_assembly = os.path.join(OUTDIR, '01_assembly', 'metaflye', 'assembly.fasta'),
+        hicanu_assembly = os.path.join(OUTDIR, '01_assembly', 'hicanu', 'hicanu.contigs.fasta'),
+        unmapped_reads = os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta')
     output:
-        hifiasm_meta_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'hifiasm_meta_contigs.fna'),
-        metaflye_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'metaflye_contigs.fna'),
-        hicanu_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'hicanu_contigs.fna'),
-        unmapped_reads = os.path.join(OUTDIR, 'antismash', 'input', 'unmapped_reads.fna')
+        hifiasm_meta_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'hifiasm_meta_contigs.fna'),
+        metaflye_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'metaflye_contigs.fna'),
+        hicanu_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'hicanu_contigs.fna'),
+        unmapped_reads = os.path.join(OUTDIR, '03_antismash', 'input', 'unmapped_reads.fna')
     log:
         os.path.join(LOGSDIR, "prepare_input_for_antismash.log")
     shell:
@@ -298,51 +248,31 @@ rule prepare_input_for_antismash:
         echo "rule prepare_input_for_antismash finished successfully!"
         """
 
-# TODO: Examine this rule again, TAKEN from BGCFlow
-rule antismash_db_setup:
-    output:
-        touch(os.path.join(LOGSDIR, "antismash_db_setup.done")), 
-        DIR = directory(os.path.join('antismash', 'databases'))
-    conda:
-        "envs/antismash_v7_bgcflow.yml"
-    log:
-        os.path.join(LOGSDIR, "antismash_db_setup.log")
-    shell:
-        """
-        download-antismash-databases --database-dir {output.DIR} 2>> {log}
-        antismash --version >> {log}
-        antismash --database {output.DIR} --prepare-data &>> {log}
-        #antismash --check-prereqs >> {log}
-        """
-
 rule antismash:
     input: 
-        os.path.join(LOGSDIR, "antismash_db_setup.done"),
-        antismash_database_dir = os.path.join('antismash', 'databases'),
-        hifiasm_meta_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'hifiasm_meta_contigs.fna'),
-        metaflye_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'metaflye_contigs.fna'),
-        hicanu_assembly = os.path.join(OUTDIR, 'antismash', 'input', 'hicanu_contigs.fna'),
-        unmapped_reads = os.path.join(OUTDIR, 'antismash', 'input', 'unmapped_reads.fna'),
+        antismash_database_dir = os.path.join(workflow.basedir, '..', '..', 'antismash'),
+        hifiasm_meta_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'hifiasm_meta_contigs.fna'),
+        metaflye_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'metaflye_contigs.fna'),
+        hicanu_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'hicanu_contigs.fna'),
+        unmapped_reads = os.path.join(OUTDIR, '03_antismash', 'input', 'unmapped_reads.fna'),
     output:
-        hifiasm_meta_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'hifiasm-meta')),
-        metaflye_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'metaflye')),
-        hicanu_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'hicanu')),
-        unmapped_reads_antismash = directory(os.path.join(OUTDIR, 'antismash', 'output', 'unmapped-reads')),
+        hifiasm_meta_antismash = directory(os.path.join(OUTDIR, '03_antismash', 'output', 'hifiasm-meta')),
+        metaflye_antismash = directory(os.path.join(OUTDIR, '03_antismash', 'output', 'metaflye')),
+        hicanu_antismash = directory(os.path.join(OUTDIR, '03_antismash', 'output', 'hicanu')),
+        unmapped_reads_antismash = directory(os.path.join(OUTDIR, '03_antismash', 'output', 'unmapped-reads')),
     conda:
         "envs/antismash_v7_bgcflow.yml"
     threads:
         80 
     log:
         os.path.join(LOGSDIR, "antismash.log")
+    benchmark:
+        os.path.join(BENCHMARKS_DIR, "rule_antismash.tsv")
     shell:
         """
         antismash --genefinding-tool prodigal-m --output-dir {output.hifiasm_meta_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.hifiasm_meta_assembly} --logfile {log} 2>> {log}
         antismash --genefinding-tool prodigal-m --output-dir {output.metaflye_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.metaflye_assembly} --logfile {log} 2>> {log}
         antismash --genefinding-tool prodigal-m --output-dir {output.hicanu_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.hicanu_assembly} --logfile {log} 2>> {log}
-        
-        # antismash --genefinding-tool prodigal-m --output-dir {output.hifiasm_meta_antismash} --allow-long-headers -c {threads} {input.hifiasm_meta_assembly} --logfile {log} 2>> {log}
-        # antismash --genefinding-tool prodigal-m --output-dir {output.metaflye_antismash} --allow-long-headers -c {threads} {input.metaflye_assembly} --logfile {log} 2>> {log}
-        # antismash --genefinding-tool prodigal-m --output-dir {output.hicanu_antismash} --allow-long-headers -c {threads} {input.hicanu_assembly} --logfile {log} 2>> {log}
         
         if [ ! -s {input.unmapped_reads} ]; then
             echo "File unmapped_reads.fna is empty"
@@ -351,15 +281,6 @@ rule antismash:
             echo "File unmapped_reads.fna is not empty"
             antismash --genefinding-tool prodigal-m --output-dir {output.unmapped_reads_antismash} --database {input.antismash_database_dir} --allow-long-headers -c {threads} {input.unmapped_reads} --logfile {log} 2>> {log}
         fi
-        
-        # if [ ! -s {input.unmapped_reads} ]; then
-        #     echo "File unmapped_reads.fna is empty"
-        #     mkdir -p {output.unmapped_reads_antismash}
-        # else
-        #     echo "File unmapped_reads.fna is not empty"
-        #     antismash --genefinding-tool prodigal-m --output-dir {output.unmapped_reads_antismash} --allow-long-headers -c {threads} {input.unmapped_reads} --logfile {log} 2>> {log}
-        # fi
-
         """
 
 # Below command was used for current antismash outputs on various datasets
@@ -375,88 +296,76 @@ rule antismash:
 
 rule bigscape_prepare_input:
     input:
-        hifiasm_meta_antismash = os.path.join(OUTDIR, 'antismash', 'output', 'hifiasm-meta'),
-        metaflye_antismash = os.path.join(OUTDIR, 'antismash', 'output', 'metaflye'),
-        hicanu_antismash = os.path.join(OUTDIR, 'antismash', 'output', 'hicanu'),
-        unmapped_reads_antismash = os.path.join(OUTDIR, 'antismash', 'output', 'unmapped-reads')
+        hifiasm_meta_antismash = os.path.join(OUTDIR, '03_antismash', 'output', 'hifiasm-meta'),
+        metaflye_antismash = os.path.join(OUTDIR, '03_antismash', 'output', 'metaflye'),
+        hicanu_antismash = os.path.join(OUTDIR, '03_antismash', 'output', 'hicanu'),
+        unmapped_reads_antismash = os.path.join(OUTDIR, '03_antismash', 'output', 'unmapped-reads'),
+        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
     output:
-        directory(os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_input'))
+        directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'))
     shell:
         """
-        python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
+        python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_create_symlinks.py \
             --input_dir {input.hifiasm_meta_antismash} \
             --output_dir {output} \
             --prefix 'hifiasm-meta'
 
-        python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
+        python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_create_symlinks.py \
             --input_dir {input.metaflye_antismash} \
             --output_dir {output} \
             --prefix 'metaflye'
 
-        python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
+        python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_create_symlinks.py \
             --input_dir {input.hicanu_antismash} \
             --output_dir {output} \
             --prefix 'hicanu'
 
         # Check if the directory is non-empty
         if [ "$(ls -A {input.unmapped_reads_antismash})" ]; then
-            python3 hifibgc/workflow/scripts/bigscape_create_symlinks.py \
+            python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_create_symlinks.py \
             --input_dir {input.unmapped_reads_antismash} \
             --output_dir {output} \
             --prefix 'unmapped_reads_antismash'
         fi
         """
 
-# This rule TAKEN and ADAPTED from https://github.com/NBChub/bgcflow/blob/275d699ff9f3ecf8bf27d15e26fb87e261ff4815/workflow/rules/bigscape.smk
-rule install_bigscape:
-    output:
-        touch(os.path.join(LOGSDIR, "install_bigscape.done")), 
-        DIR = directory('bigscape')
-    conda:
-        "envs/bigscape.yml"
-    shell:
-        """
-        mkdir {output.DIR} && cd {output.DIR}
-        wget https://github.com/medema-group/BiG-SCAPE/archive/refs/tags/v1.1.5.zip
-        unzip -o v1.1.5.zip
-        rm v1.1.5.zip
-
-        cd BiG-SCAPE-1.1.5
-        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz
-        gunzip Pfam-A.hmm.gz
-        hmmpress Pfam-A.hmm
-        """
-
 rule run_bigscape:
     input:
-        os.path.join(LOGSDIR, "install_bigscape.done"),
-        DIR = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_input'),
+        BIGSCAPE_BIN_DIR = os.path.join(workflow.basedir, '..', '..', 'bigscape'),
+        BIGSCAPE_INPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
+        #os.path.join(LOGSDIR, "install_bigscape.done"),
     output:
-        directory(os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output'))
+        directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'))
     conda:
         "envs/bigscape.yml"
+    benchmark:
+        os.path.join(BENCHMARKS_DIR, "rule_run_bigscape.tsv")
     shell:
         """
-        python bigscape/BiG-SCAPE-1.1.5/bigscape.py -i {input.DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
-        --mix --no_classify -o {output}
+        python {input.BIGSCAPE_BIN_DIR}/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
+        --mix --no_classify --include_singletons --hybrids-off -o {output}
+        # python {input.BIGSCAPE_BIN_DIR}/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
+        # --mix --no_classify -o {output}
+        # python bigscape/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
+        # --mix --no_classify -o {output}
         """
-
+        
 rule parse_bigscape_output:
     input:
-        os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output')
+        BIGSCAPE_OUTPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
+        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
     output:
-        bigscape_output_dir = directory(os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse')),
-        c0_00 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.00.tsv'),
-        c0_10 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.10.tsv'),
-        c0_20 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.20.tsv'),
-        c0_30 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.30.tsv')
+        bigscape_output_dir = directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse')),
+        c0_00 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.00.tsv'),
+        c0_10 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.10.tsv'),
+        c0_20 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.20.tsv'),
+        c0_30 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.30.tsv')
     shell:
         """
-        #for i in output/bgc_clustering/bigscape_output/network_files/*/mix/mix_clustering_c0.*0.tsv; do
-        for i in {input}/network_files/*/mix/mix_clustering_c0.*0.tsv; do
+        for i in {input.BIGSCAPE_OUTPUT_DIR}/network_files/*/mix/mix_clustering_c0.*0.tsv; do
             echo "Processing $i"
 
-            python hifibgc/workflow/scripts/bigscape_parsing.py \
+            python {input.WORKFLOW_BASE_DIR}/scripts/bigscape_parsing.py \
             --input_clustering_file $i \
             --output_directory {output.bigscape_output_dir}
         done    
@@ -464,20 +373,22 @@ rule parse_bigscape_output:
 
 rule plot_upsetplot:
     input:
-        c0_00 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.00.tsv'),
-        c0_10 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.10.tsv'),
-        c0_20 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.20.tsv'),
-        c0_30 = os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.30.tsv')
+        c0_00 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.00.tsv'),
+        c0_10 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.10.tsv'),
+        c0_20 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.20.tsv'),
+        c0_30 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.30.tsv'),
+        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
     output:
-        directory(os.path.join(OUTDIR, 'bgc_clustering', 'bigscape_output_parse_plots'))
+        directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'))
     conda:
         "envs/r_complexupset.yml"
     shell:
         """
         mkdir -p {output}
 
-        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_00} {output} c0.00
-        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_10} {output} c0.10
-        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_20} {output} c0.20
-        Rscript hifibgc/workflow/scripts/upsetplot.R {input.c0_30} {output} c0.30
+        Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.c0_00} {output} c0.00
+        Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.c0_10} {output} c0.10
+        Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.c0_20} {output} c0.20
+        Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.c0_30} {output} c0.30
         """
+
