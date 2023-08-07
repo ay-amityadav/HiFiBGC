@@ -39,3 +39,4 @@ for file in input_dir_files:
 
     # create symbolic link
     subprocess.run(["ln", "-rs", file, output_file])
+
