@@ -1,4 +1,4 @@
-name: antismash_env
+name: antismash_7_bgcflow
 channels:
   - conda-forge
   - bioconda
