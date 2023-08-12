@@ -14,11 +14,16 @@ TODO: Check if `-c anaconda` is necessary or not
 
 # Usage
 
+## Install required database/tool
 hifibgc install
 
+## Test
 hifibgc test all
 
+## Usage
 hifibgc run 
+
+### Output
 
 
 # How it works

@@ -59,6 +59,7 @@ rule all:
         # BGC Clustering
         # Read mapping
         os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped_seqlength_histogram.svg'),
+        os.path.join(OUTDIR, '05_final_output'),
 
 
 #######################
@@ -338,12 +339,16 @@ rule run_bigscape:
         directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'))
     conda:
         "envs/bigscape.yml"
+    threads:
+        80
+    log:
+        os.path.join(LOGSDIR, "run_bigscape.log")
     benchmark:
         os.path.join(BENCHMARKS_DIR, "rule_run_bigscape.tsv")
     shell:
         """
         python {input.BIGSCAPE_BIN_DIR}/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
-        --mix --no_classify --include_singletons --hybrids-off -o {output}
+        --mix --no_classify --include_singletons --hybrids-off --cores {threads} -o {output}
         # python {input.BIGSCAPE_BIN_DIR}/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
         # --mix --no_classify -o {output}
         # python bigscape/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs 0.0001 0.1 0.2 0.3 1.0 \
@@ -371,6 +376,7 @@ rule parse_bigscape_output:
         done    
         """
 
+
 rule plot_upsetplot:
     input:
         c0_00 = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', 'df_bgc_family_to_dataset_c0.00.tsv'),
@@ -391,4 +397,35 @@ rule plot_upsetplot:
         Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.c0_20} {output} c0.20
         Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.c0_30} {output} c0.30
         """
+
+rule generate_final_outputs:  
+    input:
+        BIGSCAPE_INPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
+        BIGSCAPE_OUTPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
+        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
+    output:
+        FINAL_OUTPUT_DIR = directory(os.path.join(OUTDIR, '05_final_output'))
+    shell:
+        """
+        mkdir -p {output.FINAL_OUTPUT_DIR}/BGC_all
+        mkdir -p {output.FINAL_OUTPUT_DIR}/BGC_representative
+
+        for i in {input.BIGSCAPE_OUTPUT_DIR}/network_files/*/mix/mix_clustering_c0.30.tsv; do
+            echo "Processing $i"
+
+            echo "Now running python script!"
+            python {input.WORKFLOW_BASE_DIR}/scripts/generate_final_outputs.py \
+            --bigscape_input_dir {input.BIGSCAPE_INPUT_DIR}\
+            --bigscape_clustering_file $i \
+            --final_output_directory {output.FINAL_OUTPUT_DIR}
+        done
+        """
+
+
+
+
+
+
+
+
 
