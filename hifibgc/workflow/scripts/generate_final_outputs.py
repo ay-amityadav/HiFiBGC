@@ -35,7 +35,7 @@ def parse_antismash_output(antismash_output_directory):
             for feature in record.features:
                 qual = feature.qualifiers
 
-                if feature.type == "region": # In https://github.com/zreitz/multismash/blob/master/workflow/scripts/tabulate_regions.py, this feature is parsed.
+                if feature.type == "region":
                     length = int(feature.location.end) - int(feature.location.start)
                     contig_edge = qual["contig_edge"][0]
                     #bgc_category = qual["category"][0]
@@ -71,7 +71,7 @@ df_bgc = parse_antismash_output(\
 df_bigscape_clustering = pd.read_csv(f"{bigscape_clustering_file}", sep='\t')
 df_bigscape_clustering.columns = ['BGC Name', 'Family Number']
 
-# In the following statement, 'how='left' is used because it seems that BiG-SCAPE occasionally excludes certain BGCs that lack any of the domain-specific components. Consequently, the size of 'df_bigscape_clustering' may be smaller than that of 'df_bgc'.
+# In the following statement, 'how='left' is used because BiG-SCAPE occasionally excludes certain BGCs that lack any of the domain-specific components. Consequently, the size of 'df_bigscape_clustering' may be smaller than that of 'df_bgc'.
 df_bgc_merge_bigscape_clustering = pd.merge(df_bgc, df_bigscape_clustering, how='left', left_on='bgc_id', right_on='BGC Name') 
 df_bgc_merge_bigscape_clustering_sorted = df_bgc_merge_bigscape_clustering.sort_values(by=['Family Number'], ascending=True, na_position='first') # If NA's are present, put them at the top of dataframe
 
