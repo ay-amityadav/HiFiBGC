@@ -33,7 +33,6 @@ rule all:
 #   Assembly
 ########################
 
-# Probable TODO: add read selection option for hifiasm-meta in below rule
 rule hifiasm_meta: 
     input:
         INPUT_FASTQ
