@@ -18,7 +18,7 @@ rule antismash_db_setup:
         touch(os.path.join(LOGSDIR, "antismash_db_setup.done")), 
         DIR = directory(os.path.join(workflow.basedir, '..', '..', 'antismash')),
     conda:
-        "envs/antismash_v7_bgcflow.yml"
+        "envs/antismash_v7.yml"
     log:
         os.path.join(LOGSDIR, "antismash_db_setup.log")
     shell:
