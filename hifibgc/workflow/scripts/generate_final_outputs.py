@@ -1,11 +1,16 @@
+"""
+Generates:
+    1. a summary file containing metadata associated with all BGCs
+    2. a folder containing all BGCs 
+    3. a folder containing only representative BGCs (as determined by BiG-SCAPE clustering)
+"""
+
 import os
 import glob
-from collections import defaultdict
-from pprint import pprint
 import subprocess
 import argparse
 
-from Bio import SeqIO, SeqFeature
+from Bio import SeqIO
 import pandas as pd
 
 import warnings
