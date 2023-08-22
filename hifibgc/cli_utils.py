@@ -2,8 +2,8 @@
 This file taken from here: https://github.com/beardymcjohnface/Snaketool-utils/blob/main/snaketool_utils/cli_utils.py
 
 To make hifibgc available on conda, all its dependencies have to be available on conda. See this: https://github.com/conda/conda-build/issues/548
-`Snaketool-utils` is not available on conda, only available through pip. So instead of creating a `Snaketool-utils` conda receipe, 
-this file was directly copied from `Snaketool-utils`.
+`Snaketool-utils` is not available on conda, available only through pip. So to avoid creating a `Snaketool-utils` conda receipe, 
+this file was copied directly from `Snaketool-utils`.
 """
 
 import sys
