@@ -8,9 +8,8 @@ https://github.com/beardymcjohnface/Snaketool/wiki/Customising-your-Snaketool
 import os
 import click
 
-#from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
-from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
-#from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+#from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
@@ -103,7 +102,7 @@ def common_options(func):
 )
 @click.version_option(get_version(), "-v", "--version", is_flag=True)
 def cli():
-    """Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data
+    """Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data.
     \b
     For more options, run:
     hifibgc command --help"""
@@ -112,21 +111,13 @@ def cli():
 
 help_msg_extra = """
 \b
-CLUSTER EXECUTION:
-hifibgc run ... --profile [profile]
-For information on Snakemake profiles see:
-https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles
-\b
-RUN EXAMPLES:
-Required:           hifibgc run --input [file]
-Specify threads:    hifibgc run ... --threads [threads]
-Disable conda:      hifibgc run ... --no-use-conda 
-Change defaults:    hifibgc run ... --snake-default="-k --nolock"
-Add Snakemake args: hifibgc run ... --dry-run --keep-going --touch
-Specify targets:    hifibgc run ... all print_targets
-Available targets:
-    all             Run everything (default)
-    print_targets   List available targets
+EXAMPLE:
+Run hifibgc with defaults 
+    hifibgc run --input input.fastq  # --input is required
+Specify output directory and no of threads
+    hifibgc run --input input.fastq --output outdir --threads 16 
+Specify bigscape_cutoff option
+    hifibgc run --input input.fastq --bigscape_cutoff 0.4 
 """
 
 @click.command(
@@ -135,66 +126,98 @@ Available targets:
         help_option_names=["-h", "--help"], ignore_unknown_options=True
     ),
 )
-@click.option("--input", "_input", help="Input file/directory", type=str, required=True)
-@common_options
-def run(_input, output, log, **kwargs):
+@click.option("--input", "_input", help="Input file", type=str, required=True)
+@click.option(
+            "--output",
+            help="Output directory",
+            type=click.Path(dir_okay=True, writable=True, readable=True),
+            default="hifibgc1.out",
+            show_default=True,
+        )
+@click.option(
+    "--bigscape_cutoff", help="BiG-SCAPE cutoff parameter", default=0.3, type=float, show_default=True
+)
+@click.option(
+    "--configfile",
+    default="config.yaml",
+    show_default=False,
+    callback=default_to_output,
+    help="Custom config file [default: (outputDir)/config.yaml]",
+)
+@click.option(
+    "--threads", help="Number of threads to use", default=80, show_default=True
+)
+@click.option(
+    "--use-conda/--no-use-conda",
+    default=True,
+    help="Use conda for Snakemake rules",
+    show_default=True,
+)
+@click.option(
+    "--conda-prefix",
+    default=snake_base(os.path.join("workflow", "conda")),
+    help="Custom conda env directory",
+    type=click.Path(),
+    show_default=False,
+)
+@click.option(
+    "--snake-default",
+    multiple=True,
+    default=[
+        "--rerun-incomplete",
+        "--printshellcmds",
+        "--nolock",
+        "--show-failed-logs",
+    ],
+    help="Customise Snakemake runtime args",
+    show_default=True,
+)
+@click.option(
+    "--log",
+    default="hifibgc.log",
+    callback=default_to_output,
+    hidden=True,
+)
+@click.argument("snake_args", nargs=-1)
+def run(_input, output, log, bigscape_cutoff, **kwargs):
     """Run HiFiBGC"""
     # Get absolute path of input file
     _input = os.path.abspath(_input)
-    
+    #keep_all_files = True
+
     # Config to add or update in configfile
     merge_config = {
         "input": _input,
         "output": output,
-        "log": log
+        "log": log,
+        "bigscape_cutoff": bigscape_cutoff,
+        #"keep_all_files": keep_all_files,    
     }
 
     # run!
     run_snakemake(
         # Full path to Snakefile
-        snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
+        snakefile_path=snake_base(os.path.join("workflow", "hifibgc.smk")),
         system_config=snake_base(os.path.join("config", "config.yaml")),
         merge_config=merge_config,
         log=log,
         **kwargs
     )
 
-
-# @click.command(
-#     epilog=help_msg_extra,
-#     context_settings=dict(
-#         help_option_names=["-h", "--help"], ignore_unknown_options=True
-#     ),
-# )
-# @common_options
-# def run(output, log, **kwargs):
-#     """Run HiFiBGC"""
-#     # Config to add or update in configfile
-#     merge_config = {
-#      "output": output,
-#      "log": log
-#     }
-
-#     # run!
-#     run_snakemake(
-#         # Full path to Snakefile
-#         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
-#         system_config=snake_base(os.path.join("config", "config.yaml")),
-#         merge_config=merge_config,
-#         **kwargs
-#     )
-
-
 # Install command
+help_msg_extra = """
+\b
+EXAMPLE:
+hifibgc install : Install required database/tool
+"""
 @click.command(
     epilog=help_msg_extra,
     context_settings=dict(
         help_option_names=["-h", "--help"], ignore_unknown_options=True
     ),
 )
-@common_options
 def install(output, **kwargs):
-    """Install database/tool"""
+    """Install required database/tool"""
 
     # run!
     run_snakemake(
@@ -205,6 +228,11 @@ def install(output, **kwargs):
     )
 
 # Test command
+help_msg_extra = """
+\b
+EXAMPLE:
+hifibgc test : Run hifibgc with test data
+"""
 @click.command(
     epilog=help_msg_extra,
     context_settings=dict(
@@ -217,26 +245,52 @@ def test(**kwargs):
     input = snake_base(os.path.join("test_data", "test_data_sampled.fastq"))
     
     # Config to add or update in configfile
-    merge_config = {"input": input}
-
+    merge_config = {
+        "input": input,
+    }
+    
     # run!
     run_snakemake(
         # Full path to Snakefile
-        snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
+        snakefile_path=snake_base(os.path.join("workflow", "hifibgc.smk")),
         system_config=snake_base(os.path.join("config", "config.yaml")),
         merge_config=merge_config,
         **kwargs
     )
 
 
-
-@click.command()
-@common_options
+# Config command
+help_msg_extra = """
+\b
+EXAMPLE:
+    hifibgc config                  : Copy system default config.yaml to default directory hifibgc1.out
+    hifibgc config --output outdir  : Copy system default config.yaml to directory outdir
+"""
+@click.command(
+    epilog=help_msg_extra,
+    context_settings=dict(
+         help_option_names=["-h", "--help"], ignore_unknown_options=True
+     ),
+)
+@click.option(
+            "--output",
+            help="Output directory",
+            type=click.Path(dir_okay=True, writable=True, readable=True),
+            default="hifibgc1.out",
+            show_default=True,
+        )
+@click.option(
+            "--configfile",
+            default="config.yaml",
+            show_default=False,
+            callback=default_to_output,
+            help="Custom config file [default: (outputDir)/config.yaml]",
+        )
 def config(configfile, **kwargs):
     """Copy the system default config file"""
     copy_config(configfile, system_config=snake_base(os.path.join("config", "config.yaml")))
 
-
+# Citation command
 @click.command()
 def citation(**kwargs):
     """Print the citation(s) for this tool"""
