@@ -25,7 +25,7 @@ set_size = function(w, h, factor=1.5) {
 set_size(4, 3)
 
 # Output pdf
-output_file = paste(output_dir, "/", "upsetplot_all-classes-combined", "_", c_parameter, ".pdf", sep='')
+output_file = paste(output_dir, "/", "upsetplot", "_", c_parameter, ".pdf", sep='')
 pdf(output_file) 
 upset(df, colnames(df), name='dataset', width_ratio=0.1)
 dev.off()
@@ -33,8 +33,7 @@ dev.off()
 set_size(4, 3)
 
 # Output jpeg
-output_file = paste(output_dir, "/", "upsetplot_all-classes-combined", "_", c_parameter, ".jpg", sep='')
+output_file = paste(output_dir, "/", "upsetplot", "_", c_parameter, ".jpg", sep='')
 jpeg(output_file)
-#upset(df, colnames(df), name='dataset', width_ratio=0.1, set_sizes=FALSE)
 upset(df, colnames(df), name='dataset', width_ratio=0.4)
 dev.off()
