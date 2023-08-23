@@ -2,9 +2,6 @@
 """CONFIGURATION"""
 configfile: os.path.join(workflow.basedir, "..", "config", "config.yaml")
 
-OUTDIR = config['output']
-LOGSDIR = os.path.join(OUTDIR, 'logs')
-
 
 """RULES"""
 rule all:
@@ -15,25 +12,19 @@ rule all:
 
 rule antismash_db_setup:
     output:
-        touch(os.path.join(LOGSDIR, "antismash_db_setup.done")), 
         DIR = directory(os.path.join(workflow.basedir, '..', '..', 'antismash')),
     conda:
         "envs/antismash_v7.yml"
-    log:
-        os.path.join(LOGSDIR, "antismash_db_setup.log")
     shell:
         """
-        download-antismash-databases --database-dir {output.DIR} 2>> {log}
-        antismash --version >> {log}
-        antismash --database {output.DIR} --prepare-data &>> {log}
-        #antismash --check-prereqs >> {log}
+        download-antismash-databases --database-dir {output.DIR} 
+        antismash --version 
+        antismash --database {output.DIR} --prepare-data 
+        #antismash --check-prereqs 
         """
 
-
-# This rule TAKEN and ADAPTED from https://github.com/NBChub/bgcflow/blob/275d699ff9f3ecf8bf27d15e26fb87e261ff4815/workflow/rules/bigscape.smk
 rule install_bigscape:
     output:
-        touch(os.path.join(LOGSDIR, "install_bigscape.done")), 
         DIR = directory(os.path.join(workflow.basedir, '..', '..', 'bigscape')),
     conda:
         "envs/bigscape.yml"
