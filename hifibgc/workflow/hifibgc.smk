@@ -257,8 +257,8 @@ rule bigscape_prepare_input:
 
 rule run_bigscape:
     input:
-        BIGSCAPE_BIN_DIR = os.path.join(workflow.basedir, '..', '..', 'bigscape'),
-        BIGSCAPE_INPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
+        bigscape_bin_dir = os.path.join(workflow.basedir, '..', '..', 'bigscape'),
+        bigscape_input_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
     output:
         directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'))
     params:
@@ -273,20 +273,20 @@ rule run_bigscape:
         os.path.join(BENCHMARKS_DIR, "rule_run_bigscape.tsv")
     shell:
         """
-        python {input.BIGSCAPE_BIN_DIR}/BiG-SCAPE-1.1.5/bigscape.py -i {input.BIGSCAPE_INPUT_DIR} --cutoffs {params.bigscape_cutoff} \
+        python {input.bigscape_bin_dir}/BiG-SCAPE-1.1.5/bigscape.py -i {input.bigscape_input_dir} --cutoffs {params.bigscape_cutoff} \
         --mix --no_classify --hybrids-off --clans-off --cores {threads} -o {output} &> {log}
         """
 
 rule parse_bigscape_output:
     input:
-        BIGSCAPE_OUTPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
+        bigscape_output_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
         WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
     output:
         bigscape_output_parse_dir = directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse')),
         bigscape_output_parse_file = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', f"df_bgc_family_to_dataset_c{config['bigscape_cutoff']:.2f}.tsv"),
     shell:
         """
-        for i in {input.BIGSCAPE_OUTPUT_DIR}/network_files/*/mix/mix_clustering_c*.tsv; do
+        for i in {input.bigscape_output_dir}/network_files/*/mix/mix_clustering_c*.tsv; do
             python {input.WORKFLOW_BASE_DIR}/scripts/bigscape_parse_output.py \
                 --input_clustering_file $i \
                 --output_directory {output.bigscape_output_parse_dir}
@@ -317,25 +317,25 @@ rule plot_upsetplot:
 
 rule generate_final_outputs:  
     input:
-        BIGSCAPE_INPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
-        BIGSCAPE_OUTPUT_DIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
-        PLOT_UPSETPLOT_OUTDIR = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'),
+        bigscape_input_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
+        bigscape_output_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
+        plot_upsetplot_outdir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'),
         WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
     output:
-        FINAL_OUTPUT_DIR = directory(os.path.join(OUTDIR, '05_final_output'))
+        final_output_dir = directory(os.path.join(OUTDIR, '05_final_output'))
     shell:
         """
-        mkdir -p {output.FINAL_OUTPUT_DIR}/BGC_all
-        mkdir -p {output.FINAL_OUTPUT_DIR}/BGC_representative
+        mkdir -p {output.final_output_dir}/BGC_all
+        mkdir -p {output.final_output_dir}/BGC_representative
 
-        for i in {input.BIGSCAPE_OUTPUT_DIR}/network_files/*/mix/mix_clustering_c*.tsv; do
+        for i in {input.bigscape_output_dir}/network_files/*/mix/mix_clustering_c*.tsv; do
             python {input.WORKFLOW_BASE_DIR}/scripts/generate_final_outputs.py \
-                --bigscape_input_dir {input.BIGSCAPE_INPUT_DIR}\
+                --bigscape_input_dir {input.bigscape_input_dir}\
                 --bigscape_clustering_file $i \
-                --final_output_directory {output.FINAL_OUTPUT_DIR}
+                --final_output_directory {output.final_output_dir}
         done
 
         # Copy upsetplots to final output directory
-        cp {input.PLOT_UPSETPLOT_OUTDIR}/* {output.FINAL_OUTPUT_DIR}
+        cp {input.plot_upsetplot_outdir}/* {output.final_output_dir}
 
         """
