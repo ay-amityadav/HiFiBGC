@@ -8,8 +8,8 @@ https://github.com/beardymcjohnface/Snaketool/wiki/Customising-your-Snaketool
 import os
 import click
 
-#from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
-from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+#from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
@@ -208,7 +208,7 @@ def run(_input, output, log, bigscape_cutoff, **kwargs):
 help_msg_extra = """
 \b
 EXAMPLE:
-hifibgc install : Install required database/tool
+hifibgc install : Install required database and tool
 """
 @click.command(
     epilog=help_msg_extra,
@@ -216,8 +216,34 @@ hifibgc install : Install required database/tool
         help_option_names=["-h", "--help"], ignore_unknown_options=True
     ),
 )
-def install(output, **kwargs):
-    """Install required database/tool"""
+@click.option(
+    "--use-conda/--no-use-conda",
+    default=True,
+    help="Use conda for Snakemake rules",
+    show_default=True,
+)
+@click.option(
+    "--conda-prefix",
+    default=snake_base(os.path.join("workflow", "conda")),
+    help="Custom conda env directory",
+    type=click.Path(),
+    show_default=False,
+)
+@click.option(
+    "--snake-default",
+    multiple=True,
+    default=[
+        "--rerun-incomplete",
+        "--printshellcmds",
+        "--nolock",
+        "--show-failed-logs",
+    ],
+    help="Customise Snakemake runtime args",
+    show_default=True,
+)
+@click.argument("snake_args", nargs=-1)
+def install(**kwargs):
+    """Install required database and tool"""
 
     # run!
     run_snakemake(
