@@ -1,6 +1,5 @@
-include hifibgc/hifibgc.LICENSE
-include hifibgc/hifibgc.CITATION
 include hifibgc/hifibgc.VERSION
+include hifibgc/hifibgc.CITATION
 include hifibgc/__init__.py
 include hifibgc/__main__.py
 include hifibgc/cli_utils.py
@@ -10,3 +9,6 @@ include hifibgc/workflow/hifibgc.smk
 include hifibgc/workflow/install.smk
 include hifibgc/config/*
 include hifibgc/test_data/*
+include hifibgc.LICENSE
+include README.md
+include setup.py
