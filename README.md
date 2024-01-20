@@ -15,31 +15,40 @@ mamba is preferred over below conda as it takes much lesser time and consumes le
 mamba can be installed from [here](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
 
 ### Option 2: conda
-```conda create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc``` <br>
-`conda activate hifibgc`
+```
+conda create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
+
+conda activate hifibgc
+```
 
 # Usage
 
 ### Install prerequisites
 Below command need to be run only once. It installs a required database and a tool.
-
-```hifibgc install``` <br>
-
- 
+```
+hifibgc install
+```
 ### Run on test data
 Test installation of HiFiBGC on a small dataset using below command. 
-
-```hifibgc test``` <br>
+```
+hifibgc test
+```
 
 On successful completion of above command, you should see something like `Snakemake finished successfully` on terminal and an output directory `hifibgc1.out`.
 
 ### Run on real data
-Run hifibgc with defaults: <br>
-    `hifibgc run --input input.fastq`  # --input is required <br> <br>
-Specify output directory and no of threads: <br>
-    `hifibgc run --input input.fastq --output outdir --threads 16`  <br> <br>
-Specify bigscape_cutoff option: <br>
-    `hifibgc run --input input.fastq --bigscape_cutoff 0.4` <br>
+Run HiFiBGC with defaults:
+```
+hifibgc run --input input.fastq  # --input is required
+```
+Specify output directory and no of threads:
+```
+hifibgc run --input input.fastq --output outdir --threads 16
+```
+Specify bigscape_cutoff option:
+```
+hifibgc run --input input.fastq --bigscape_cutoff 0.4
+```
 
 ### Output
 
