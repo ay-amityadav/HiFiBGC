@@ -5,8 +5,11 @@ Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data.
 # Installation
 
 ### Option 1: mamba
-```mamba create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc``` <br>
-`mamba activate hifibgc`
+```
+mamba create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
+
+mamba activate hifibgc
+```
 
 mamba is preferred over below conda as it takes much lesser time and consumes lesser memory (RAM).<br>
 mamba can be installed from [here](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
