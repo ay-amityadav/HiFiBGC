@@ -1,6 +1,6 @@
 # HiFiBGC
 
-Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data.
+HiFiBGC is a tool to detect Biosynthetic Gene Clusters (BGCs) in PacBio HiFi metagenomic data.
 
 # Installation
 
