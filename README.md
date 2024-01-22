@@ -37,9 +37,9 @@ hifibgc test
 On successful completion of above command, you should see something like `Snakemake finished successfully` on terminal and an output directory `hifibgc1.out`.
 
 ### Run on real data
-Run HiFiBGC with defaults:
+Run HiFiBGC with default options with a required input (.fastq) file:
 ```
-hifibgc run --input input.fastq  # --input is required
+hifibgc run --input input.fastq  
 ```
 Specify output directory and no of threads:
 ```
