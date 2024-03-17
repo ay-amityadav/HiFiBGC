@@ -26,9 +26,8 @@ BENCHMARKS_DIR = os.path.join(OUTDIR, 'benchmarks')
 
 rule all:
     input:
-        os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'),
-        os.path.join(OUTDIR, '05_final_output'),
-
+        os.path.join(OUTDIR, '05_final_output', 'upsetplot', f"upsetplot_c{config['bigscape_cutoff']:.2f}.pdf")
+    
 #######################
 #   Assembly
 ########################
@@ -98,8 +97,8 @@ rule hicanu:
             canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 maxThreads={threads} &> {log}
         fi
         """
-        # IMP: In above command, I have added parameter `minInputCoverage=0.3` to resolve the issue I was facing due to small size of test data. Relevant issue: https://github.com/marbl/canu/issues/1760. Also, in regard to this only, stopOnLowCoverage=0.3 parameter was added above. 
-        # Above parameter settings are taken from "Source: Metagenome assembly of high-fidelity long reads with hifiasm-meta"
+        # IMP: In above command, parameter `minInputCoverage=0.3` is added to resolve the issue occurring due to small size of test data. Relevant issue: https://github.com/marbl/canu/issues/1760. Also, in this regard only, stopOnLowCoverage=0.3 parameter was added above. 
+        # Above parameter settings are taken from "Metagenome assembly of high-fidelity long reads with hifiasm-meta, 2022"
 
 
 #####################
@@ -231,24 +230,24 @@ rule bigscape_prepare_input:
         directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'))
     shell:
         """
-        python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_prepare_input.py \
+        python3 {input.WORKFLOW_BASE_DIR}/scripts/prepare_input_for_bigscape.py \
             --input_dir {input.hifiasm_meta_antismash} \
             --output_dir {output} \
             --prefix 'hifiasm-meta'
 
-        python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_prepare_input.py \
+        python3 {input.WORKFLOW_BASE_DIR}/scripts/prepare_input_for_bigscape.py \
             --input_dir {input.metaflye_antismash} \
             --output_dir {output} \
             --prefix 'metaflye'
 
-        python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_prepare_input.py \
+        python3 {input.WORKFLOW_BASE_DIR}/scripts/prepare_input_for_bigscape.py \
             --input_dir {input.hicanu_antismash} \
             --output_dir {output} \
             --prefix 'hicanu'
 
         # Check if the directory is non-empty
         if [ "$(ls -A {input.unmapped_reads_antismash})" ]; then
-            python3 {input.WORKFLOW_BASE_DIR}/scripts/bigscape_prepare_input.py \
+            python3 {input.WORKFLOW_BASE_DIR}/scripts/prepare_input_for_bigscape.py \
             --input_dir {input.unmapped_reads_antismash} \
             --output_dir {output} \
             --prefix 'unmapped_reads'
@@ -277,52 +276,18 @@ rule run_bigscape:
         --mix --no_classify --hybrids-off --clans-off --cores {threads} -o {output} &> {log}
         """
 
-rule parse_bigscape_output:
-    input:
-        bigscape_output_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
-        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
-    output:
-        bigscape_output_parse_dir = directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse')),
-        bigscape_output_parse_file = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', f"df_bgc_family_to_dataset_c{config['bigscape_cutoff']:.2f}.tsv"),
-    shell:
-        """
-        for i in {input.bigscape_output_dir}/network_files/*/mix/mix_clustering_c*.tsv; do
-            python {input.WORKFLOW_BASE_DIR}/scripts/bigscape_parse_output.py \
-                --input_clustering_file $i \
-                --output_directory {output.bigscape_output_parse_dir}
-        done    
-        """
-
-rule plot_upsetplot:
-    input:
-        bigscape_output_parse_file = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse', f"df_bgc_family_to_dataset_c{config['bigscape_cutoff']:.2f}.tsv"),
-        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir),
-    output:
-        directory(os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'))
-    params:
-        bigscape_cutoff = config['bigscape_cutoff']
-    conda:
-        "envs/r_complexupset.yml"
-    shell:
-        """
-        mkdir -p {output}
-
-        Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.bigscape_output_parse_file} {output} {params.bigscape_cutoff}
-        """
-
-
 #####################
 #   Final outputs
 #####################
 
-rule generate_final_outputs:  
+rule report_bgcs_with_metadata:  
     input:
         bigscape_input_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
         bigscape_output_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
-        plot_upsetplot_outdir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output_parse_plots'),
         WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
     output:
-        final_output_dir = directory(os.path.join(OUTDIR, '05_final_output'))
+        final_output_dir = directory(os.path.join(OUTDIR, '05_final_output')),
+        bgc_all_metadata_file = os.path.join(OUTDIR, '05_final_output', 'BGC_all_metadata.tsv'),
     shell:
         """
         mkdir -p {output.final_output_dir}/BGC_all
@@ -334,8 +299,39 @@ rule generate_final_outputs:
                 --bigscape_clustering_file $i \
                 --final_output_directory {output.final_output_dir}
         done
+        """
 
-        # Copy upsetplots to final output directory
-        cp {input.plot_upsetplot_outdir}/* {output.final_output_dir}
+rule prepare_input_for_upsetplot:
+    input:
+        bigscape_input_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_input'),
+        bigscape_output_dir = os.path.join(OUTDIR, '04_bgc_clustering', 'bigscape_output'),
+        bgc_all_metadata_file = os.path.join(OUTDIR, '05_final_output', 'BGC_all_metadata.tsv'),
+        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir)
+    output:
+        upsetplot_dir = directory(os.path.join(OUTDIR, '05_final_output', 'upsetplot')),
+        upsetplot_input_file = os.path.join(OUTDIR, '05_final_output', 'upsetplot', f"df_bgc_family_to_dataset_c{config['bigscape_cutoff']:.2f}.tsv"),
+    shell:
+        """
+        for i in {input.bigscape_output_dir}/network_files/*/mix/mix_clustering_c*.tsv; do
+            python {input.WORKFLOW_BASE_DIR}/scripts/prepare_input_for_upsetplot.py \
+                --bigscape_input_dir {input.bigscape_input_dir} \
+                --bigscape_clustering_file $i \
+                --bgc_all_metadata_file {input.bgc_all_metadata_file} \
+                --output_directory {output.upsetplot_dir}
+        done    
+        """
 
+rule plot_upsetplot:
+    input:
+        upsetplot_input_file = os.path.join(OUTDIR, '05_final_output', 'upsetplot', f"df_bgc_family_to_dataset_c{config['bigscape_cutoff']:.2f}.tsv"),
+        WORKFLOW_BASE_DIR = os.path.join(workflow.basedir),
+    output:
+        os.path.join(OUTDIR, '05_final_output', 'upsetplot', f"upsetplot_c{config['bigscape_cutoff']:.2f}.pdf") 
+    params:
+        bigscape_cutoff = config['bigscape_cutoff']
+    conda:
+        "envs/r_complexupset.yml"
+    shell:
+        """
+        Rscript {input.WORKFLOW_BASE_DIR}/scripts/upsetplot.R {input.upsetplot_input_file} {output} 
         """
