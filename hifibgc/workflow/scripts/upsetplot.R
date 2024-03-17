@@ -1,15 +1,11 @@
+# Create Upsetplot 
 library(ggplot2)
 library(ComplexUpset)
 
 args <- commandArgs(trailingOnly = TRUE)
 
 input_file <- args[1]
-output_dir <- args[2]
-c_parameter <- args[3]
-
-df <- read.csv(input_file, sep='\t', header=TRUE, row.names=1)
-
-df[] = df[] == 1
+output_file <- args[2]
 
 set_size = function(w, h, factor=1.5) {
     s = 1 * factor
@@ -22,18 +18,34 @@ set_size = function(w, h, factor=1.5) {
     )
 }
 
-set_size(4, 3)
+df <- read.csv(input_file, sep='\t', header=TRUE)
 
-# Output pdf
-output_file = paste(output_dir, "/", "upsetplot", "_", c_parameter, ".pdf", sep='')
+# Rename column names
+names(df)[names(df) == "Partial.Complete"] <- "Complete/Partial"
+
+if (ncol(df) == 6) {
+    columns <- c('hicanu', 'metaflye', 'hifiasm.meta')
+} else {
+    columns <- c('hicanu', 'metaflye', 'hifiasm.meta', 'unmapped_reads')
+}
+
+# Plot Upsetplot 
 pdf(output_file) 
-upset(df, colnames(df), name='dataset', width_ratio=0.1)
-dev.off()
-
-set_size(4, 3)
-
-# Output jpeg
-output_file = paste(output_dir, "/", "upsetplot", "_", c_parameter, ".jpg", sep='')
-jpeg(output_file)
-upset(df, colnames(df), name='dataset', width_ratio=0.4)
+set_size(8, 3)
+upset(
+    df,
+    columns,
+    base_annotations=list(
+        'Intersection size'=intersection_size(
+            counts=TRUE,
+            mapping=aes(fill=`Complete/Partial`),
+            bar_number_threshold=1.00
+        )
+    ),
+    set_sizes=(
+        upset_set_size()
+        + theme(axis.ticks.x=element_line())
+    ),
+    width_ratio=0.360,
+ ) + patchwork::plot_layout(heights=c(1.2, 0.5))
 dev.off()
