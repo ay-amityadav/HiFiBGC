@@ -43,11 +43,11 @@ hifibgc run --input input.fastq
 ```
 Specify output directory and no of threads:
 ```
-hifibgc run --input input.fastq --output outdir --threads 16
+hifibgc run --input input.fastq --output outdir --threads 50
 ```
 Specify bigscape_cutoff option:
 ```
-hifibgc run --input input.fastq --bigscape_cutoff 0.4
+hifibgc run --input input.fastq --bigscape_cutoff 0.3
 ```
 
 ### Output
@@ -57,7 +57,7 @@ The output directory from HiFiBGC contains following folders and files.
 ```
 .
 └── hifibgc1.out
-    ├── 01_assembly --> Folder containing output from three assemblers
+    ├── 01_assembly --> Output from three assemblers
     ├── 02_mapping_reads_to_merged_assembly --> Read mapping to concatenated assembly and extraction of unmapped reads 
     ├── 03_antismash --> BGC prediction
     ├── 04_bgc_clustering --> BGC clustering
@@ -74,5 +74,5 @@ Among above, the folder `05_final_output` contains primary output of HiFiBGC, sp
 │   ├── BGC_all --> Folder containing all BGC .gbk files
 │   ├── BGC_all_metadata.tsv --> File containing metadata associated with all BGCs
 │   ├── BGC_representative --> Folder containing representative BGC .gbk files
-│   ├── upsetplot_0.3.[jpg|pdf] --> Upsetplot comparing results from three assemblers and unmapped reads
+│   ├── upsetplot --> Upsetplot comparison of results from three assemblers and unmapped reads
 ```
