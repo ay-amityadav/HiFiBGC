@@ -42,7 +42,7 @@ setup(
     name="hifibgc",
     packages=find_packages(),
     url="",
-    python_requires=">=3.9",
+    python_requires="==3.11.4",
     description="Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data",
     long_description=get_description(),
     long_description_content_type="text/markdown",
@@ -53,6 +53,7 @@ setup(
     py_modules=["hifibgc"],
     install_requires=[
         "snakemake==7.31.1",
+        "pulp==2.7.0",    
         "pyyaml>=6.0",
         "Click>=8.1.3",
         "pandas==2.0.3",
