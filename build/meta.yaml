@@ -1,5 +1,5 @@
 {% set name = "hifibgc" %}
-{% set version = "0.1.8" %}
+{% set version = "0.1.13" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: fd932e0b7800cf07707d97d5b71f64ebb108f54e92378d07d57754862a644642
+  sha256: 3ea0263cacb46abab764381028b1e84d41abe14a5c68660512c29acf09605e25
 
 build:
   number: 0
@@ -27,6 +27,7 @@ requirements:
     - python >=3.9
     - pyyaml >=6.0
     - snakemake-minimal ==7.31.1
+    - pulp ==2.7.0
     - mamba <1.4.2
 
 test:
