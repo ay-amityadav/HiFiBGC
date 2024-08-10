@@ -1,0 +1,9 @@
+name: hifiasm_meta
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - gfatools=0.5
+  - hifiasm_meta=hamtv0.3.1
+
