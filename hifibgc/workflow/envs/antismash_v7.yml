@@ -18,7 +18,6 @@ dependencies:
   - ghostscript
   - icu
   - libexpat
-  - libgcc-ng
   - libxml2
   - libxslt
   - libzlib
