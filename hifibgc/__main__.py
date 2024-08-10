@@ -8,8 +8,8 @@ https://github.com/beardymcjohnface/Snaketool/wiki/Customising-your-Snaketool
 import os
 import click
 
-from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
-#from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+#from .cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
+from cli_utils import OrderedCommands, run_snakemake, copy_config, echo_click
 
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
