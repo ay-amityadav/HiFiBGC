@@ -94,7 +94,7 @@ rule hicanu:
             echo "Enough data present for assembly and successfully completed."
         else
             echo "Enough data not present for assembly (such as in test_data_sampled.fastq), hence running with tweaked parameters."
-            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 maxThreads={threads} &> {log}
+            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=10 minInputCoverage=0.3 stopOnLowCoverage=0.3 maxThreads={threads} &> {log}
         fi
         """
         # IMP: In above command, parameter `minInputCoverage=0.3` is added to resolve the issue occurring due to small size of test data. Relevant issue: https://github.com/marbl/canu/issues/1760. Also, in this regard only, stopOnLowCoverage=0.3 parameter was added above. 
