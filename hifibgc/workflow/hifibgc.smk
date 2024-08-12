@@ -174,10 +174,10 @@ rule prepare_input_for_antismash:
         unmapped_reads = os.path.join(OUTDIR, '03_antismash', 'input', 'unmapped_reads.fna')
     shell:
         """
-        ln -rs {input.hifiasm_meta_assembly} {output.hifiasm_meta_assembly}
-        ln -rs {input.metaflye_assembly} {output.metaflye_assembly}
-        ln -rs {input.hicanu_assembly} {output.hicanu_assembly}
-        ln -rs {input.unmapped_reads} {output.unmapped_reads}
+        ln -s $(realpath --relative-to=$(dirname {output.hifiasm_meta_assembly}) {input.hifiasm_meta_assembly}) {output.hifiasm_meta_assembly}
+        ln -s $(realpath --relative-to=$(dirname {output.metaflye_assembly}) {input.metaflye_assembly}) {output.metaflye_assembly}
+        ln -s $(realpath --relative-to=$(dirname {output.hicanu_assembly}) {input.hicanu_assembly}) {output.hicanu_assembly}
+        ln -s $(realpath --relative-to=$(dirname {output.unmapped_reads}) {input.unmapped_reads}) {output.unmapped_reads}
         """
 
 rule antismash:
