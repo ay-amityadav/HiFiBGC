@@ -174,10 +174,21 @@ rule prepare_input_for_antismash:
         unmapped_reads = os.path.join(OUTDIR, '03_antismash', 'input', 'unmapped_reads.fna')
     shell:
         """
-        ln -s $(realpath --relative-to=$(dirname {output.hifiasm_meta_assembly}) {input.hifiasm_meta_assembly}) {output.hifiasm_meta_assembly}
-        ln -s $(realpath --relative-to=$(dirname {output.metaflye_assembly}) {input.metaflye_assembly}) {output.metaflye_assembly}
-        ln -s $(realpath --relative-to=$(dirname {output.hicanu_assembly}) {input.hicanu_assembly}) {output.hicanu_assembly}
-        ln -s $(realpath --relative-to=$(dirname {output.unmapped_reads}) {input.unmapped_reads}) {output.unmapped_reads}
+        cd $(dirname {output.hifiasm_meta_assembly}) && \
+        target=$(python3 -c 'import os; print(os.path.relpath("{input.hifiasm_meta_assembly}", os.path.dirname("{output.hifiasm_meta_assembly}")))') && \
+        ln -s $target $(basename {output.hifiasm_meta_assembly})
+
+        cd $(dirname {output.metaflye_assembly}) && \
+        target=$(python3 -c 'import os; print(os.path.relpath("{input.metaflye_assembly}", os.path.dirname("{output.metaflye_assembly}")))') && \
+        ln -s $target $(basename {output.metaflye_assembly})
+
+        cd $(dirname {output.hicanu_assembly}) && \
+        target=$(python3 -c 'import os; print(os.path.relpath("{input.hicanu_assembly}", os.path.dirname("{output.hicanu_assembly}")))') && \
+        ln -s $target $(basename {output.hicanu_assembly})
+
+        cd $(dirname {output.unmapped_reads}) && \
+        target=$(python3 -c 'import os; print(os.path.relpath("{input.unmapped_reads}", os.path.dirname("{output.unmapped_reads}")))') && \
+        ln -s $target $(basename {output.unmapped_reads})
         """
 
 rule antismash:
