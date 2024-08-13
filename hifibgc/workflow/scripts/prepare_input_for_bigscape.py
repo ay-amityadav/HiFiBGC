@@ -35,7 +35,7 @@ def main():
         output_file = output_dir + "/" + file_basename
 
         # create symbolic link
-        subprocess.run(["ln", "-rs", file, output_file])
+        subprocess.run(["ln", "-s", os.path.relpath(file, os.path.dirname(output_file)), output_file])
 
 if __name__ == '__main__':
     main()
