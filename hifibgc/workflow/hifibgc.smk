@@ -94,7 +94,7 @@ rule hicanu:
             echo "Enough data present for assembly and successfully completed."
         else
             echo "Enough data not present for assembly (such as in test_data_sampled.fastq), hence running with tweaked parameters."
-            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=200 minInputCoverage=0.3 stopOnLowCoverage=0.3 maxThreads={threads} &> {log}
+            canu -d {output.DIR} -p hicanu -pacbio-hifi {input} maxInputCoverage=1000 genomeSize=100m batMemory=10 minInputCoverage=0.3 stopOnLowCoverage=0.3 maxThreads={threads} &> {log}
         fi
         """
         # IMP: In above command, parameter `minInputCoverage=0.3` is added to resolve the issue occurring due to small size of test data. Relevant issue: https://github.com/marbl/canu/issues/1760. Also, in this regard only, stopOnLowCoverage=0.3 parameter was added above. 
@@ -174,10 +174,17 @@ rule prepare_input_for_antismash:
         unmapped_reads = os.path.join(OUTDIR, '03_antismash', 'input', 'unmapped_reads.fna')
     shell:
         """
-        ln -rs {input.hifiasm_meta_assembly} {output.hifiasm_meta_assembly}
-        ln -rs {input.metaflye_assembly} {output.metaflye_assembly}
-        ln -rs {input.hicanu_assembly} {output.hicanu_assembly}
-        ln -rs {input.unmapped_reads} {output.unmapped_reads}
+        mkdir -p $(dirname {output.hifiasm_meta_assembly}) && \
+        ln -s $(python3 -c 'import os; print(os.path.relpath("{input.hifiasm_meta_assembly}", os.path.dirname("{output.hifiasm_meta_assembly}")))') {output.hifiasm_meta_assembly}
+
+        mkdir -p $(dirname {output.metaflye_assembly}) && \
+        ln -s $(python3 -c 'import os; print(os.path.relpath("{input.metaflye_assembly}", os.path.dirname("{output.metaflye_assembly}")))') {output.metaflye_assembly}
+
+        mkdir -p $(dirname {output.hicanu_assembly}) && \
+        ln -s $(python3 -c 'import os; print(os.path.relpath("{input.hicanu_assembly}", os.path.dirname("{output.hicanu_assembly}")))') {output.hicanu_assembly}
+
+        mkdir -p $(dirname {output.unmapped_reads}) && \
+        ln -s $(python3 -c 'import os; print(os.path.relpath("{input.unmapped_reads}", os.path.dirname("{output.unmapped_reads}")))') {output.unmapped_reads}
         """
 
 rule antismash:
