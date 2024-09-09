@@ -105,27 +105,27 @@ rule hicanu:
 #   Unmapped reads
 #####################
 
-rule merge_assembly:
+rule concatenate_assembly:
     input: 
         hifiasm_meta_assembly = os.path.join(OUTDIR, '01_assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
         metaflye_assembly = os.path.join(OUTDIR, '01_assembly', 'metaflye', 'assembly.fasta'),
         hicanu_assembly = os.path.join(OUTDIR, '01_assembly', 'hicanu', 'hicanu.contigs.fasta')
     output: 
-        os.path.join(OUTDIR, '01_assembly', 'merged_assembly', 'merged_assembly.fasta'),
-        DIR = directory(os.path.join(OUTDIR, '01_assembly', 'merged_assembly')),
+        os.path.join(OUTDIR, '01_assembly', 'concatenated_assembly', 'concatenated_assembly.fasta'),
+        DIR = directory(os.path.join(OUTDIR, '01_assembly', 'concatenated_assembly')),
     shell:
         """
         mkdir -p {output.DIR}
-        cat {input.hifiasm_meta_assembly} {input.metaflye_assembly} {input.hicanu_assembly} > {output.DIR}/merged_assembly.fasta
+        cat {input.hifiasm_meta_assembly} {input.metaflye_assembly} {input.hicanu_assembly} > {output.DIR}/concatenated_assembly.fasta
         """
 
 rule map_reads_and_extract_unmapped_reads:
     input: 
         reads = INPUT_FASTQ,
-        merged_assembly = os.path.join(OUTDIR, '01_assembly', 'merged_assembly', 'merged_assembly.fasta')
+        concatenated_assembly = os.path.join(OUTDIR, '01_assembly', 'concatenated_assembly', 'concatenated_assembly.fasta')
     output:
-        os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta'),
-        DIR = directory(os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly')),
+        os.path.join(OUTDIR, '02_mapping_reads_to_concatenated_assembly', 'reads_mapped_to_concatenated_assembly_unmapped.fasta'),
+        DIR = directory(os.path.join(OUTDIR, '02_mapping_reads_to_concatenated_assembly')),
     conda:
         "envs/mapping.yml"
     threads:
@@ -139,20 +139,20 @@ rule map_reads_and_extract_unmapped_reads:
         # Make directory
         mkdir -p {output.DIR}
 
-        # Map reads to merged assembly
-        minimap2 -ax map-hifi -t {threads} {input.merged_assembly} {input.reads} > {output.DIR}/reads_mapped_to_merged_assembly.sam 2> {log}
+        # Map reads to concatenated assembly
+        minimap2 -ax map-hifi -t {threads} {input.concatenated_assembly} {input.reads} > {output.DIR}/reads_mapped_to_concatenated_assembly.sam 2> {log}
 
         # Convert SAM to BAM, and sort the BAM
-        samtools view -b --threads {threads} {output.DIR}/reads_mapped_to_merged_assembly.sam | samtools sort --threads {threads} > {output.DIR}/reads_mapped_to_merged_assembly.bam 2>> {log}
+        samtools view -b --threads {threads} {output.DIR}/reads_mapped_to_concatenated_assembly.sam | samtools sort --threads {threads} > {output.DIR}/reads_mapped_to_concatenated_assembly.bam 2>> {log}
 
         # Include (or filter in) only unmapped reads in BAM file 
-        samtools view -f 4 -b {output.DIR}/reads_mapped_to_merged_assembly.bam > {output.DIR}/reads_mapped_to_merged_assembly_unmapped.bam 2>> {log}
+        samtools view -f 4 -b {output.DIR}/reads_mapped_to_concatenated_assembly.bam > {output.DIR}/reads_mapped_to_concatenated_assembly_unmapped.bam 2>> {log}
 
         # Get the unmapped reads in a fasta file
-        samtools fasta --threads {threads} {output.DIR}/reads_mapped_to_merged_assembly_unmapped.bam > {output.DIR}/reads_mapped_to_merged_assembly_unmapped.fasta 2>> {log}
+        samtools fasta --threads {threads} {output.DIR}/reads_mapped_to_concatenated_assembly_unmapped.bam > {output.DIR}/reads_mapped_to_concatenated_assembly_unmapped.fasta 2>> {log}
 
         # Delete some above intermediate files
-        rm {output.DIR}/reads_mapped_to_merged_assembly.sam {output.DIR}/reads_mapped_to_merged_assembly_unmapped.bam
+        rm {output.DIR}/reads_mapped_to_concatenated_assembly.sam {output.DIR}/reads_mapped_to_concatenated_assembly_unmapped.bam
         
         """
 
@@ -166,7 +166,7 @@ rule prepare_input_for_antismash:
         hifiasm_meta_assembly = os.path.join(OUTDIR, '01_assembly', 'hifiasm-meta', 'hifiasm_meta.p_contigs.fa'),
         metaflye_assembly = os.path.join(OUTDIR, '01_assembly', 'metaflye', 'assembly.fasta'),
         hicanu_assembly = os.path.join(OUTDIR, '01_assembly', 'hicanu', 'hicanu.contigs.fasta'),
-        unmapped_reads = os.path.join(OUTDIR, '02_mapping_reads_to_merged_assembly', 'reads_mapped_to_merged_assembly_unmapped.fasta')
+        unmapped_reads = os.path.join(OUTDIR, '02_mapping_reads_to_concatenated_assembly', 'reads_mapped_to_concatenated_assembly_unmapped.fasta')
     output:
         hifiasm_meta_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'hifiasm_meta_contigs.fna'),
         metaflye_assembly = os.path.join(OUTDIR, '03_antismash', 'input', 'metaflye_contigs.fna'),
