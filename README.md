@@ -20,6 +20,10 @@ conda create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
 
 conda activate hifibgc
 ```
+<br>
+
+HiFiBGC uses following third-party tools: [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta), [metaFlye](https://github.com/mikolmogorov/Flye), [HiCanu](https://github.com/marbl/canu), [Minimap2](https://github.com/lh3/minimap2), [SAMtools](https://github.com/samtools/samtools), [antiSMASH](https://github.com/antismash/antismash), [BiG-SCAPE](https://github.com/medema-group/BiG-SCAPE), [complex-upsetplot](https://github.com/krassowski/complex-upset), [Snaketool](https://github.com/beardymcjohnface/Snaketool), [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
+
 
 # Usage
 
@@ -75,4 +79,47 @@ Among above, the folder `05_final_output` contains primary output of HiFiBGC, sp
 │   ├── BGC_all_metadata.tsv --> File containing metadata associated with all BGCs
 │   ├── BGC_representative --> Folder containing representative BGC .gbk files
 │   ├── upsetplot --> Upsetplot comparison of results from three assemblers and unmapped reads
+```
+
+# Commands 
+
+**$hifibgc --help**
+```
+Usage: hifibgc [OPTIONS] COMMAND [ARGS]...
+
+  Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data. For
+  more options, run: hifibgc command --help
+
+Options:
+  -v, --version  Show the version and exit.
+  -h, --help     Show this message and exit.
+
+Commands:
+  run       Run HiFiBGC
+  install   Install required database and tool
+  test      Test HiFiBGC
+  config    Copy the system default config file
+  citation  Print the citation(s) for this tool
+```
+
+**$hifibgc run --help**
+```
+Usage: hifibgc run [OPTIONS] [SNAKE_ARGS]...
+
+  Run HiFiBGC
+
+Options:
+  --input TEXT                  Input file  [required]
+  --output PATH                 Output directory  [default: hifibgc1.out]
+  --bigscape_cutoff FLOAT       BiG-SCAPE cutoff parameter  [default: 0.3]
+  --configfile TEXT             Custom config file [default:
+                                (outputDir)/config.yaml]
+  --threads INTEGER             Number of threads to use  [default: 80]
+  --use-conda / --no-use-conda  Use conda for Snakemake rules  [default: use-
+                                conda]
+  --conda-prefix PATH           Custom conda env directory
+  --snake-default TEXT          Customise Snakemake runtime args  [default:
+                                --rerun-incomplete, --printshellcmds,
+                                --nolock, --show-failed-logs]
+  -h, --help                    Show this message and exit.
 ```
