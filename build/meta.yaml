@@ -1,5 +1,5 @@
 {% set name = "hifibgc" %}
-{% set version = "0.1.13" %}
+{% set version = "0.1.14" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 3ea0263cacb46abab764381028b1e84d41abe14a5c68660512c29acf09605e25
+  sha256: 8ce7d663d2093e43e7b2945e9cdd16cb41fc8db6f94df267e4bb24aec6cd5ee4
 
 build:
   number: 0
@@ -24,7 +24,7 @@ requirements:
     - biopython ==1.81
     - click >=8.1.3
     - pandas ==2.0.3
-    - python >=3.9
+    - python >=3.9,<3.12
     - pyyaml >=6.0
     - snakemake-minimal ==7.31.1
     - pulp ==2.7.0
