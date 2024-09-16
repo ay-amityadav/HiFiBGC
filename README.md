@@ -20,9 +20,20 @@ conda create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
 
 conda activate hifibgc
 ```
+
+### Option 3: pip
+
+HiFiBGC can be installed via pip using below command. In addition, it requires python 3.11, pip, and mamba.
+```
+pip install hifibgc
+```
+HiFiBGC can run without mamba, but then every command to be run with `--conda-frontend conda` parameter, as an example `hifibgc test --conda-frontend conda`.
+
 <br>
 
-HiFiBGC uses following third-party tools: [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta), [metaFlye](https://github.com/mikolmogorov/Flye), [HiCanu](https://github.com/marbl/canu), [Minimap2](https://github.com/lh3/minimap2), [SAMtools](https://github.com/samtools/samtools), [antiSMASH](https://github.com/antismash/antismash), [BiG-SCAPE](https://github.com/medema-group/BiG-SCAPE), [complex-upsetplot](https://github.com/krassowski/complex-upset), [Snaketool](https://github.com/beardymcjohnface/Snaketool), [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
+**OS:** HiFiBGC has been tested on Linux system (Ubuntu 20.04) and macos-12. 
+
+**Third-party tools:** HiFiBGC uses following third-party tools: [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta), [metaFlye](https://github.com/mikolmogorov/Flye), [HiCanu](https://github.com/marbl/canu), [Minimap2](https://github.com/lh3/minimap2), [SAMtools](https://github.com/samtools/samtools), [antiSMASH](https://github.com/antismash/antismash), [BiG-SCAPE](https://github.com/medema-group/BiG-SCAPE), [complex-upsetplot](https://github.com/krassowski/complex-upset), [Snaketool](https://github.com/beardymcjohnface/Snaketool), [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
 
 
 # Usage
