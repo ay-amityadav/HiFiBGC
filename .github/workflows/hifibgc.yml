@@ -1,0 +1,44 @@
+name: Install HiFiBGC on macOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  install:
+    runs-on: macos-12
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-activate-base: false
+        python-version: 3.9
+
+    - name: Install hifibgc using pip and test it
+      shell: bash -l {0}
+      run: |
+        conda create -n hifibgc_14_pip -c conda-forge python=3.11 -y 
+        conda activate hifibgc_14_pip
+        pip install hifibgc
+        hifibgc -h
+        hifibgc install -p --conda-frontend conda
+        hifibgc test -p --conda-frontend conda
+
+    - name: Install hifibgc using conda and test it
+      shell: bash -l {0}
+      run: |
+        conda create -n hifibgc_14_conda -c conda-forge -c bioconda -c amityadav hifibgc -y
+        conda activate hifibgc_14_conda
+        hifibgc -h
+        hifibgc install -p
+        hifibgc test -p
