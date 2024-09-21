@@ -27,11 +27,11 @@ HiFiBGC can be installed via pip using below command. In addition, it requires p
 ```
 pip install hifibgc
 ```
-HiFiBGC can run without mamba, but then every command to be run with `--conda-frontend conda` parameter, as an example `hifibgc test --conda-frontend conda`.
+HiFiBGC can run without mamba, but then every command need to be run with `--conda-frontend conda` parameter, as an example `hifibgc test --conda-frontend conda`.
 
 <br>
 
-**OS:** HiFiBGC has been tested on Linux system (Ubuntu 20.04) and macos-12. 
+**OS:** HiFiBGC has been tested on Linux system Ubuntu 20.04 and macOS-12. For macOS-12, installation has been tested via conda and pip only, not mamba. 
 
 **Third-party tools:** HiFiBGC uses following third-party tools: [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta), [metaFlye](https://github.com/mikolmogorov/Flye), [HiCanu](https://github.com/marbl/canu), [Minimap2](https://github.com/lh3/minimap2), [SAMtools](https://github.com/samtools/samtools), [antiSMASH](https://github.com/antismash/antismash), [BiG-SCAPE](https://github.com/medema-group/BiG-SCAPE), [complex-upsetplot](https://github.com/krassowski/complex-upset), [Snaketool](https://github.com/beardymcjohnface/Snaketool), [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
 
