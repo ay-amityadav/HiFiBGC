@@ -6,7 +6,7 @@ HiFiBGC is a tool for detecting Biosynthetic Gene Clusters (BGCs) in PacBio HiFi
 - [Installation](#installation)
 - [Usage](#usage)
 - [Output](#output)
-- [Other commands](#other-commands)
+- [Commands](#commands)
 - [Third-party Tools](#third-party-tools)
 - [Citation](#citation)
 
@@ -35,38 +35,45 @@ pip install hifibgc
 ```
 Note: HiFiBGC can run without mamba, but then every command need to be run with `--conda-frontend conda` (e.g., `hifibgc test --conda-frontend conda`).
 
-**OS Compatibility:** Installation has been tested on Ubuntu 20.04 (Linux) and macOS-12. On macOS-12, installation was verified using conda and pip, but not mamba.
+### Test Installation
 
-## Usage
-
-### Install Prerequisites
+#### Install Prerequisites
 Run once to install the required database and tool:
 ```bash
 hifibgc install
 ```
 
-### Test Installation
+#### Run on a test dataset
 Verify the installation using the test dataset:
 ```bash
 hifibgc test
 ```
 Successful completion will display "Snakemake finished successfully" and create an output directory `hifibgc1.out`.
 
-### Run on Real Data
-Basic usage:
+**OS Compatibility:** Installation has been tested on Ubuntu 20.04 (Linux) and macOS-12. On macOS-12, installation was verified using conda and pip, but not mamba.
+
+## Usage
+
+### Install Prerequisites
+Run once to install the required database and tool (note: if you have already run this earlier for testing installation, then skip this step):
+```bash
+hifibgc install
+```
+
+### Run on your own data
+
+To run HiFiBGC on your own data, use the following command:
 ```bash
 hifibgc run --input input.fastq
 ```
 
-Specify output directory and thread count:
+By default, HiFiBGC outputs to a directory named `hifibgc1.out`, you can specify a custom name using `--output` option as shown below. The count of threads can be specified via `--threads` option (the default is 80).
 ```bash
 hifibgc run --input input.fastq --output outdir --threads 50
 ```
 
-Set BiG-SCAPE cutoff:
-```bash
-hifibgc run --input input.fastq --bigscape_cutoff 0.3
-```
+For all available options, see [Run command help](#run-command-help).
+
 
 ## Output
 
@@ -95,23 +102,64 @@ Among above, the folder `05_final_output` contains primary output of HiFiBGC wit
 └── upsetplot/                   # Upsetplot comparison of results from three assemblers and unmapped reads
 ```
 
-## Other commands
+## Commands
 
-### Main Help
+### Main help
 ```bash
 hifibgc --help
 ```
 
-### Run Command Help
+```
+Usage: hifibgc [OPTIONS] COMMAND [ARGS]...
+
+  Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data. For
+  more options, run: hifibgc command --help
+
+Options:
+  -v, --version  Show the version and exit.
+  -h, --help     Show this message and exit.
+
+Commands:
+  run       Run HiFiBGC
+  install   Install required database and tool
+  test      Test HiFiBGC
+  config    Copy the system default config file
+  citation  Print the citation(s) for this tool
+```
+
+
+### Run command help
 ```bash
 hifibgc run --help
 ```
+
+```
+Usage: hifibgc run [OPTIONS] [SNAKE_ARGS]...
+
+  Run HiFiBGC
+
+Options:
+  --input TEXT                  Input file  [required]
+  --output PATH                 Output directory  [default: hifibgc1.out]
+  --bigscape_cutoff FLOAT       BiG-SCAPE cutoff parameter  [default: 0.3]
+  --configfile TEXT             Custom config file [default:
+                                (outputDir)/config.yaml]
+  --threads INTEGER             Number of threads to use  [default: 80]
+  --use-conda / --no-use-conda  Use conda for Snakemake rules  [default: use-
+                                conda]
+  --conda-prefix PATH           Custom conda env directory
+  --snake-default TEXT          Customise Snakemake runtime args  [default:
+                                --rerun-incomplete, --printshellcmds,
+                                --nolock, --show-failed-logs]
+  -h, --help                    Show this message and exit.
+```
+
 
 For detailed usage of other commands, use `hifibgc <command> --help`.
 
 ## Third-party Tools
 
-HiFiBGC utilizes the following tools:
+HiFiBGC utilizes following tools:
 - [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta)
 - [metaFlye](https://github.com/mikolmogorov/Flye)
 - [HiCanu](https://github.com/marbl/canu)
