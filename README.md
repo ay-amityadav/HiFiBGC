@@ -1,136 +1,127 @@
 # HiFiBGC
 
-HiFiBGC is a tool to detect Biosynthetic Gene Clusters (BGCs) in PacBio HiFi metagenomic data.
+HiFiBGC is a tool for detecting Biosynthetic Gene Clusters (BGCs) in PacBio HiFi metagenomic data.
 
-# Installation
+## Table of Contents
+- [Installation](#installation)
+- [Usage](#usage)
+- [Output](#output)
+- [Other commands](#other-commands)
+- [Third-party Tools](#third-party-tools)
+- [Citation](#citation)
 
-### Option 1: mamba
-```
+## Installation
+
+Choose one of the following installation methods:
+
+### Option 1: mamba (Recommended)
+```bash
 mamba create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
-
 mamba activate hifibgc
 ```
-
 mamba is preferred over below conda as it takes much lesser time and consumes lesser memory (RAM).<br>
 mamba can be installed from [here](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
 
 ### Option 2: conda
-```
+```bash
 conda create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
-
 conda activate hifibgc
 ```
 
 ### Option 3: pip
-
-HiFiBGC can be installed via pip using below command. In addition, it requires python 3.11, pip, and mamba.
-```
+Requires Python 3.11, pip, and mamba:
+```bash
 pip install hifibgc
 ```
-HiFiBGC can run without mamba, but then every command need to be run with `--conda-frontend conda` parameter, as an example `hifibgc test --conda-frontend conda`.
+Note: HiFiBGC can run without mamba, but then every command need to be run with `--conda-frontend conda` (e.g., `hifibgc test --conda-frontend conda`).
 
-<br>
+**OS Compatibility:** Installation has been tested on Ubuntu 20.04 (Linux) and macOS-12. On macOS-12, installation was verified using conda and pip, but not mamba.
 
-**OS:** HiFiBGC has been tested on Linux system Ubuntu 20.04 and macOS-12. For macOS-12, installation has been tested via conda and pip only, not mamba. 
+## Usage
 
-**Third-party tools:** HiFiBGC uses following third-party tools: [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta), [metaFlye](https://github.com/mikolmogorov/Flye), [HiCanu](https://github.com/marbl/canu), [Minimap2](https://github.com/lh3/minimap2), [SAMtools](https://github.com/samtools/samtools), [antiSMASH](https://github.com/antismash/antismash), [BiG-SCAPE](https://github.com/medema-group/BiG-SCAPE), [complex-upsetplot](https://github.com/krassowski/complex-upset), [Snaketool](https://github.com/beardymcjohnface/Snaketool), [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
-
-
-# Usage
-
-### Install prerequisites
-Below command need to be run only once. It installs a required database and a tool.
-```
+### Install Prerequisites
+Run once to install the required database and tool:
+```bash
 hifibgc install
 ```
-### Run on test data
-Test installation of HiFiBGC on a small dataset using below command. 
-```
+
+### Test Installation
+Verify the installation using the test dataset:
+```bash
 hifibgc test
 ```
+Successful completion will display "Snakemake finished successfully" and create an output directory `hifibgc1.out`.
 
-On successful completion of above command, you should see something like `Snakemake finished successfully` on terminal and an output directory `hifibgc1.out`.
+### Run on Real Data
+Basic usage:
+```bash
+hifibgc run --input input.fastq
+```
 
-### Run on real data
-Run HiFiBGC with default options with a required input (.fastq) file:
-```
-hifibgc run --input input.fastq  
-```
-Specify output directory and no of threads:
-```
+Specify output directory and thread count:
+```bash
 hifibgc run --input input.fastq --output outdir --threads 50
 ```
-Specify bigscape_cutoff option:
-```
+
+Set BiG-SCAPE cutoff:
+```bash
 hifibgc run --input input.fastq --bigscape_cutoff 0.3
 ```
 
-### Output
+## Output
 
-The output directory from HiFiBGC contains following folders and files.
-
-```
-.
-└── hifibgc1.out
-    ├── 01_assembly --> Output from three assemblers
-    ├── 02_mapping_reads_to_merged_assembly --> Read mapping to concatenated assembly and extraction of unmapped reads 
-    ├── 03_antismash --> BGC prediction
-    ├── 04_bgc_clustering --> BGC clustering
-    ├── 05_final_output --> Primary output of HiFiBGC
-    ├── benchmarks --> Resource usage and time consumption by different components of HiFiBGC
-    ├── config.yaml --> Configuration file for HiFiBGC run
-    ├── hifibgc.log --> Snakemake log file
-    └── logs --> Logs associated with different tools used in HiFiBGC
-```
-Among above, the folder `05_final_output` contains primary output of HiFiBGC, specifically following folders and files.
+The output directory structure:
 
 ```
-├── 05_final_output
-│   ├── BGC_all --> Folder containing all BGC .gbk files
-│   ├── BGC_all_metadata.tsv --> File containing metadata associated with all BGCs
-│   ├── BGC_representative --> Folder containing representative BGC .gbk files
-│   ├── upsetplot --> Upsetplot comparison of results from three assemblers and unmapped reads
+hifibgc1.out/
+├── 01_assembly/                 # Output from three assemblers
+├── 02_mapping_reads_to_merged_assembly/  # Read mapping to concatenated assembly and unmapped read extraction
+├── 03_antismash/                # BGC prediction
+├── 04_bgc_clustering/           # BGC clustering
+├── 05_final_output/             # Primary HiFiBGC output
+├── benchmarks/                  # Resource usage and timing information for different components of HiFiBGC
+├── config.yaml                  # Configuration file for HiFiBGC run
+├── hifibgc.log                  # Snakemake log file
+└── logs/                        # Tool-specific log files
 ```
 
-# Commands 
+Among above, the folder `05_final_output` contains primary output of HiFiBGC with below directory structure.
 
-**$hifibgc --help**
 ```
-Usage: hifibgc [OPTIONS] COMMAND [ARGS]...
-
-  Detect Biosynthetic Gene Clusters (BGCs) in HiFi metagenomic data. For
-  more options, run: hifibgc command --help
-
-Options:
-  -v, --version  Show the version and exit.
-  -h, --help     Show this message and exit.
-
-Commands:
-  run       Run HiFiBGC
-  install   Install required database and tool
-  test      Test HiFiBGC
-  config    Copy the system default config file
-  citation  Print the citation(s) for this tool
+05_final_output/                 # Primary HiFiBGC output
+├── BGC_all/                     # All BGC .gbk files
+├── BGC_all_metadata.tsv         # Metadata for all BGCs
+├── BGC_representative/          # Representative BGC .gbk files
+└── upsetplot/                   # Upsetplot comparison of results from three assemblers and unmapped reads
 ```
 
-**$hifibgc run --help**
-```
-Usage: hifibgc run [OPTIONS] [SNAKE_ARGS]...
+## Other commands
 
-  Run HiFiBGC
-
-Options:
-  --input TEXT                  Input file  [required]
-  --output PATH                 Output directory  [default: hifibgc1.out]
-  --bigscape_cutoff FLOAT       BiG-SCAPE cutoff parameter  [default: 0.3]
-  --configfile TEXT             Custom config file [default:
-                                (outputDir)/config.yaml]
-  --threads INTEGER             Number of threads to use  [default: 80]
-  --use-conda / --no-use-conda  Use conda for Snakemake rules  [default: use-
-                                conda]
-  --conda-prefix PATH           Custom conda env directory
-  --snake-default TEXT          Customise Snakemake runtime args  [default:
-                                --rerun-incomplete, --printshellcmds,
-                                --nolock, --show-failed-logs]
-  -h, --help                    Show this message and exit.
+### Main Help
+```bash
+hifibgc --help
 ```
+
+### Run Command Help
+```bash
+hifibgc run --help
+```
+
+For detailed usage of other commands, use `hifibgc <command> --help`.
+
+## Third-party Tools
+
+HiFiBGC utilizes the following tools:
+- [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta)
+- [metaFlye](https://github.com/mikolmogorov/Flye)
+- [HiCanu](https://github.com/marbl/canu)
+- [Minimap2](https://github.com/lh3/minimap2)
+- [SAMtools](https://github.com/samtools/samtools)
+- [antiSMASH](https://github.com/antismash/antismash)
+- [BiG-SCAPE](https://github.com/medema-group/BiG-SCAPE)
+- [complex-upsetplot](https://github.com/krassowski/complex-upset)
+- [Snaketool](https://github.com/beardymcjohnface/Snaketool)
+- [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
+
+## Citation
+Forthcoming.
