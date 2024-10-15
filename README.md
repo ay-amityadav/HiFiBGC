@@ -108,7 +108,6 @@ Among above, the folder `05_final_output` contains primary output of HiFiBGC wit
 ```bash
 $ hifibgc --help
 ```
-
 ```
 Usage: hifibgc [OPTIONS] COMMAND [ARGS]...
 
@@ -132,7 +131,6 @@ Commands:
 ```bash
 $ hifibgc run --help
 ```
-
 ```
 Usage: hifibgc run [OPTIONS] [SNAKE_ARGS]...
 
