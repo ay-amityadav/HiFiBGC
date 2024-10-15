@@ -106,7 +106,7 @@ Among above, the folder `05_final_output` contains primary output of HiFiBGC wit
 
 ### Main help
 ```bash
-hifibgc --help
+$ hifibgc --help
 ```
 
 ```
@@ -130,7 +130,7 @@ Commands:
 
 ### Run command help
 ```bash
-hifibgc run --help
+$ hifibgc run --help
 ```
 
 ```
