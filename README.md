@@ -14,7 +14,7 @@ HiFiBGC is a tool for detecting Biosynthetic Gene Clusters (BGCs) in PacBio HiFi
 
 Choose one of the following installation methods:
 
-### Option 1: mamba (Recommended)
+### Option 1: mamba (recommended)
 ```bash
 mamba create -n hifibgc -c conda-forge -c bioconda -c amityadav -y hifibgc
 mamba activate hifibgc
@@ -35,9 +35,9 @@ pip install hifibgc
 ```
 Note: HiFiBGC can run without mamba, but then every command need to be run with `--conda-frontend conda` (e.g., `hifibgc test --conda-frontend conda`).
 
-### Test Installation
+### Test installation
 
-#### Install Prerequisites
+#### Install prerequisites
 Run once to install the required database and tool:
 ```bash
 hifibgc install
@@ -54,7 +54,7 @@ Successful completion will display "Snakemake finished successfully" and create 
 
 ## Usage
 
-### Install Prerequisites
+### Install prerequisites
 Run once to install the required database and tool (note: if you have already run this earlier for testing installation, then skip this step):
 ```bash
 hifibgc install
@@ -155,7 +155,7 @@ Options:
 
 For detailed usage of other commands, use `hifibgc <command> --help`.
 
-## Third-party Tools
+## Third-party tools
 
 HiFiBGC utilizes following tools:
 - [hifiasm-meta](https://github.com/xfengnefx/hifiasm-meta)
