@@ -170,4 +170,4 @@ HiFiBGC utilizes following tools:
 - [Snaketool-utils](https://github.com/beardymcjohnface/Snaketool-utils)
 
 ## Citation
-Forthcoming.
+Yadav, A., Subramanian, S. HiFiBGC: an ensemble approach for improved biosynthetic gene cluster detection in PacBio HiFi-read metagenomes. *BMC Genomics* **25**, 1096 (2024). https://doi.org/10.1186/s12864-024-10950-7
